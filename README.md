@@ -13,6 +13,15 @@ uygulama bunları **madde madde** indeksler ve tarayıcınızda şunları sunar:
   hiyerarşisine göre gruplanır ve bir kontrol listesi üretilir.
 - 📄 **Tam metin görüntüleme** — herhangi bir sonuca tıklayınca ilgili madde
   metni, arama terimleri işaretlenmiş hâlde açılır.
+- 🔗 **Çapraz atıf takibi** — madde metnindeki "bu Kanunun 3 üncü maddesi",
+  "213 sayılı Vergi Usul Kanununun 344 üncü maddesi", "mükerrer 355 inci
+  maddesi" gibi atıflar otomatik tanınır ve **tıklanabilir bağlantıya**
+  dönüşür; tıklayınca atıf yapılan madde açılır, "← Geri" ile dönersiniz.
+  Atıf yapılan kanun yüklü değilse atıf noktalı çizgiyle işaretlenir.
+- ⭐ **Kayıtlı aramalar** — sık kullandığınız konu aramalarını ve işlem
+  tariflerini ⭐ Kaydet ile saklarsınız; arama kutusunun altında çip olarak
+  görünür, tıklayınca yeniden çalışır. Kayıtlar uygulamanın yanındaki
+  `kayitli_aramalar.json` dosyasında tutulur (yedeklenebilir).
 - 🔄 **Güncellenebilir mevzuat** — kanun değiştiğinde eski dosyayı yenisiyle
   değiştirmeniz yeterli; uygulama değişikliği otomatik algılar
   ("Yeniden İndeksle" düğmesi de vardır).
@@ -69,6 +78,12 @@ adla eski dosyanın üzerine yazın. Uygulama açılışta ve her "Yeniden
   ceza, oran, had/tutar, süre, tevkifat, zamanaşımı, pişmanlık, uzlaşma gibi
   kavramlar tespit edilirse ilgili kontrol uyarısı ve belgenin hiyerarşideki
   yerine dair not eklenir.
+- Çapraz atıflarda hedef belge, atıf bağlamındaki kanun numarası
+  ("213 sayılı"), kısaltma (VUK, GVK, KVK, KDV, ÖTV, AATUHK…) veya ad
+  parçasından bulunur; "bu Kanunun X inci maddesi" aynı belgeye bağlanır.
+  Bir tebliğin içindeki "Kanunun X inci maddesi" atfı, tebliğle aynı konuyu
+  paylaşan kanuna (örn. KDV tebliği → KDV Kanunu) yönlendirilir. Bu yüzden
+  ilgili kanunları da yüklemeniz atıf takibini güçlendirir.
 
 ## Önemli uyarı
 

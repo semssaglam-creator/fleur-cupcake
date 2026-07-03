@@ -227,6 +227,59 @@ HIERARCHY_NOTE = {
 
 
 # ---------------------------------------------------------------------------
+# Çapraz atıf tanıma ("213 sayılı VUK'un 344 üncü maddesi" → bağlantı)
+# ---------------------------------------------------------------------------
+
+# Kanun numarası ↔ kısaltma ↔ ad parçası eşlemesi (dosya adlarıyla atıfları
+# buluşturmak için). Örn. "213 sayılı Kanunun..." atfı, adında 'vuk' veya
+# 'vergi usul' geçen dosyaya bağlanır.
+_LAW_ALIASES = {
+    "213": ("vuk", "vergi usul"),
+    "193": ("gvk", "gelir vergisi"),
+    "5520": ("kvk", "kurumlar vergisi"),
+    "3065": ("kdv", "katma deger"),
+    "4760": ("otv", "ozel tuketim"),
+    "6183": ("aatuhk", "amme alacaklar"),
+    "488": ("damga", "damga vergisi"),
+    "492": ("harc", "harclar"),
+    "7338": ("viv", "veraset ve intikal"),
+    "197": ("mtv", "motorlu tasitlar"),
+    "1319": ("emlak", "emlak vergisi"),
+}
+
+
+def doc_aliases(name: str):
+    """Bir dosya adı için atıf eşleştirmede kullanılacak takma adlar."""
+    folded = tr_fold(name)
+    toks = set(tokenize(name))
+    aliases = {folded}
+    for num, alts in _LAW_ALIASES.items():
+        if num in toks or any(a in folded for a in alts):
+            aliases.add(num)
+            aliases.update(alts)
+    return aliases
+
+
+# "344 üncü maddesi", "mükerrer 355 inci maddesinde", "geçici 67 nci madde",
+# "5/a maddesi" biçimlerini yakalar. Madde başlıklarında sıra eki
+# bulunmadığından ("MADDE 344 –") başlıklar yanlışlıkla eşleşmez.
+_REF_RE = re.compile(
+    r"(?:(mükerrer|geçici|ek)\s+)?"
+    r"(\d+)(?:\s*/\s*([A-Za-zçğıöşüÇĞİÖŞÜ]))?"
+    r"\s*['’]?\s*(?:üncü|uncu|inci|ıncı|nci|ncı|ncu|ncü)\s+madde\w*",
+    re.IGNORECASE,
+)
+
+_CTX_LAW_NUM_RE = re.compile(r"(\d{2,5})\s*sayili")
+
+# Atıf bağlamındaki tür kelimesi ("...Kanununun", "...Tebliğinin")
+_CTX_TYPE_WORDS = [
+    ("kanun", "Kanun"), ("teblig", "Tebliğ"), ("sirkuler", "Sirküler"),
+    ("yonetmelik", "Yönetmelik"), ("yonerge", "Yönerge"), ("ozelge", "Özelge"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Madde bölümleme
 # ---------------------------------------------------------------------------
 
@@ -405,6 +458,8 @@ class Index:
         self.articles = []          # [Article]
         self.docs = []              # [{name, type, articles, error}]
         self.mtimes = {}            # path -> mtime
+        self.art_lookup = {}        # (doc_name, katlanmış etiket) -> article id
+        self.doc_alias_map = []     # [(doc_name, doc_type, alias kümesi)]
         self.lock = threading.Lock()
 
     def needs_reindex(self) -> bool:
@@ -421,6 +476,8 @@ class Index:
             self.articles = []
             self.docs = []
             self.mtimes = {}
+            self.art_lookup = {}
+            self.doc_alias_map = []
             os.makedirs(MEVZUAT_DIR, exist_ok=True)
             for fn in sorted(os.listdir(MEVZUAT_DIR)):
                 path = os.path.join(MEVZUAT_DIR, fn)
@@ -439,7 +496,9 @@ class Index:
                             continue
                         art = Article(len(self.articles), name, doc_type, rank, label, body)
                         self.articles.append(art)
+                        self.art_lookup[(name, tr_fold(label))] = art.id
                         entry["articles"] += 1
+                    self.doc_alias_map.append((name, doc_type, doc_aliases(name)))
                 except Exception as e:  # dosya bozuksa diğerlerini engelleme
                     entry["error"] = str(e)
                 self.docs.append(entry)
@@ -485,18 +544,107 @@ class Index:
             })
         return terms, results
 
+    # -- çapraz atıf çözümleme ---------------------------------------------
+
+    def _resolve_ref_doc(self, context: str, current_doc: str, current_type: str):
+        """Atıf bağlamından ('...213 sayılı Kanunun') hedef belgeyi bulur."""
+        ctx = tr_fold(context)
+        wanted_type = None
+        for word, tname in _CTX_TYPE_WORDS:
+            if word in ctx:
+                wanted_type = tname
+                break
+
+        # bağlamda geçen kanun numarası / kısaltma / ad parçası
+        hints = set(_CTX_LAW_NUM_RE.findall(ctx))
+        ctx_toks = set(ctx.split())
+        for num, alts in _LAW_ALIASES.items():
+            if num in ctx_toks or any(a in ctx for a in alts):
+                hints.add(num)
+                hints.update(alts)
+
+        candidates = [
+            (name, dtype) for name, dtype, aliases in self.doc_alias_map
+            if (not wanted_type or dtype == wanted_type) and hints & aliases
+        ]
+        if candidates:
+            # birden çok aday varsa hiyerarşide üstte olanı (kanunu) seç
+            candidates.sort(key=lambda c: next(
+                (r for keys, n, r in DOC_TYPES if n == c[1]), 8))
+            return candidates[0][0]
+
+        # ipucu yok: "bu Kanunun"/"Kanunun" gibi genel atıflar
+        if wanted_type is None or wanted_type == current_type or "bu " in ctx[-30:]:
+            if wanted_type in (None, current_type):
+                return current_doc
+        if wanted_type:
+            # mevcut belgeyle aynı konuyu paylaşan hedef türde belge
+            # (örn. 'KDV ... Tebliği' içindeki 'Kanunun' → KDV Kanunu)
+            cur_aliases = doc_aliases(current_doc)
+            same_subject = [
+                name for name, dtype, aliases in self.doc_alias_map
+                if dtype == wanted_type and (aliases & cur_aliases)
+            ]
+            if same_subject:
+                return same_subject[0]
+            typed = [name for name, dtype, _ in self.doc_alias_map if dtype == wanted_type]
+            if len(typed) == 1:
+                return typed[0]
+        return current_doc
+
+    def _find_refs(self, art):
+        """Madde gövdesindeki atıfları bulur: [(start, end, hedef_id|None)]."""
+        refs = []
+        for m in _REF_RE.finditer(art.body):
+            context = art.body[max(0, m.start() - 80):m.start()]
+            target_doc = self._resolve_ref_doc(context, art.doc, art.doc_type)
+            prefix, num, letter = m.group(1), m.group(2), m.group(3)
+            keys = []
+            base = "madde " + num
+            if prefix:
+                base = tr_fold(prefix) + " " + base
+            if letter:
+                keys.append(base + "/" + tr_fold(letter))
+            keys.append(base)
+            target_id = None
+            for key in keys:
+                target_id = self.art_lookup.get((target_doc, key))
+                if target_id is not None:
+                    break
+            if target_id == art.id:  # maddenin kendine atfını bağlama
+                target_id = None
+            refs.append((m.start(), m.end(), target_id))
+        return refs
+
+    def _render_body(self, art, terms):
+        """Gövdeyi HTML'e çevirir: vurgu + tıklanabilir çapraz atıflar."""
+        parts = []
+        pos = 0
+        for start, end, target_id in self._find_refs(art):
+            parts.append(highlight(html.escape(art.body[pos:start]), terms))
+            seg = highlight(html.escape(art.body[start:end]), terms)
+            if target_id is not None:
+                parts.append(
+                    '<a class="ref" href="#" data-ref="%d" title="Atıf yapılan maddeye git">%s</a>'
+                    % (target_id, seg))
+            else:
+                parts.append(
+                    '<span class="ref-missing" title="Atıf yapılan madde yüklü dosyalarda bulunamadı">%s</span>'
+                    % seg)
+            pos = end
+        parts.append(highlight(html.escape(art.body[pos:]), terms))
+        return "".join(parts).replace("\n", "<br>")
+
     def get_article(self, art_id: int, terms):
         with self.lock:
             if 0 <= art_id < len(self.articles):
                 art = self.articles[art_id]
-                body_html = highlight(html.escape(art.body), terms)
-                body_html = body_html.replace("\n", "<br>")
                 return {
                     "id": art.id,
                     "doc": art.doc,
                     "doc_type": art.doc_type,
                     "label": art.label,
-                    "body_html": body_html,
+                    "body_html": self._render_body(art, terms),
                     "comment": make_comment(art.body, art.doc_type),
                 }
         return None
@@ -522,6 +670,53 @@ class Index:
 
 
 INDEX = Index()
+
+# ---------------------------------------------------------------------------
+# Kayıtlı aramalar (uygulamanın yanında JSON dosyasında saklanır)
+# ---------------------------------------------------------------------------
+
+SAVED_FILE = os.path.join(BASE_DIR, "kayitli_aramalar.json")
+_SAVED_LOCK = threading.Lock()
+
+
+def load_saved():
+    try:
+        with open(SAVED_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return [d for d in data
+                    if isinstance(d, dict) and d.get("text")
+                    and d.get("mode") in ("search", "comply")]
+    except (OSError, json.JSONDecodeError):
+        pass
+    return []
+
+
+def save_saved(items):
+    tmp = SAVED_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, SAVED_FILE)
+
+
+def saved_add(mode: str, text: str):
+    text = text.strip()
+    if not text or mode not in ("search", "comply"):
+        return load_saved()
+    with _SAVED_LOCK:
+        items = load_saved()
+        if not any(i["mode"] == mode and i["text"] == text for i in items):
+            items.insert(0, {"mode": mode, "text": text[:500]})
+            save_saved(items[:100])  # makul bir üst sınır
+        return load_saved()
+
+
+def saved_delete(mode: str, text: str):
+    with _SAVED_LOCK:
+        items = [i for i in load_saved()
+                 if not (i["mode"] == mode and i["text"] == text)]
+        save_saved(items)
+        return items
 
 # ---------------------------------------------------------------------------
 # Web arayüzü
@@ -591,6 +786,19 @@ dialog::backdrop { background: rgba(15,30,45,.55); }
   padding: 6px 12px; cursor: pointer; font-size: .95rem; }
 .dlg-body { padding: 16px 20px 22px; line-height: 1.65; max-height: 70vh; overflow-y: auto; }
 .empty { color: var(--muted); padding: 18px 4px; }
+a.ref { color: var(--accent); font-weight: 600; text-decoration: underline;
+  text-decoration-style: dotted; text-underline-offset: 3px; cursor: pointer; }
+.ref-missing { border-bottom: 1px dotted var(--muted); cursor: help; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: #e8eef4;
+  color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+  padding: 4px 10px; font-size: .85rem; cursor: pointer; max-width: 340px; }
+.chip .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip:hover { border-color: var(--accent); }
+.chip .del { border: 0; background: none; color: var(--muted); cursor: pointer;
+  font-size: .85rem; padding: 0 2px; }
+.chip .del:hover { color: #b00020; }
+.btn.star { background: #b98a00; }
 footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18px; }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #10161c; --card: #1a232c; --ink: #e6edf3; --muted: #9fb0bf;
@@ -598,6 +806,8 @@ footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18p
   .badge { background: #26313c; }
   .badge.kanun { background: #14382a; color: #7fd0a8; }
   .checklist { background: #142720; border-color: #1f3a2f; }
+  .chip { background: #26313c; }
+  a.ref { color: #7fd0a8; }
 }
 </style>
 </head>
@@ -618,8 +828,10 @@ footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18p
       <input id="q" placeholder="Aranacak konu… (ör. kira geliri istisnası, KDV tevkifatı, pişmanlık)"
              onkeydown="if(event.key==='Enter')doSearch()">
       <button onclick="doSearch()">Ara</button>
+      <button class="btn star" title="Bu aramayı kaydet" onclick="saveCurrent('search')">⭐ Kaydet</button>
     </div>
-    <div class="hint">Sonuçlarda kısa özet ve otomatik yorum gösterilir; maddeye tıklayınca tam metin açılır.</div>
+    <div class="chips" id="chips-search"></div>
+    <div class="hint">Sonuçlarda kısa özet ve otomatik yorum gösterilir; maddeye tıklayınca tam metin açılır. Sık kullandığınız konuları ⭐ ile kaydedin.</div>
     <div id="results"></div>
   </div>
 
@@ -627,7 +839,11 @@ footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18p
     <div class="searchrow">
       <textarea id="tx" rows="3" placeholder="Yapacağınız/inceleyeceğiniz işlemi kısaca tarif edin… (ör. Mükellef 2025 yılında konut kira geliri elde etti, beyanname vermedi; pişmanlıkla beyan etmek istiyor.)"></textarea>
     </div>
-    <div style="margin-top:8px"><button class="btn" onclick="doComply()">Uyum Kontrolü Yap</button></div>
+    <div style="margin-top:8px; display:flex; gap:8px">
+      <button class="btn" onclick="doComply()">Uyum Kontrolü Yap</button>
+      <button class="btn star" title="Bu işlem tarifini kaydet" onclick="saveCurrent('comply')">⭐ Kaydet</button>
+    </div>
+    <div class="chips" id="chips-comply"></div>
     <div class="hint">İşlem tarifinizdeki anahtar kavramlar mevzuatla eşleştirilir; ilgili hükümler normlar hiyerarşisine göre gruplanır ve kontrol listesi üretilir.</div>
     <div id="complyout"></div>
   </div>
@@ -641,7 +857,11 @@ footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18p
   </div>
 
   <dialog id="dlg">
-    <div class="dlg-head"><b id="dlg-title"></b><button onclick="dlg.close()">Kapat ✕</button></div>
+    <div class="dlg-head">
+      <button id="dlg-back" style="display:none" onclick="goBack()">← Geri</button>
+      <b id="dlg-title"></b>
+      <button onclick="dlg.close()">Kapat ✕</button>
+    </div>
     <div class="dlg-body" id="dlg-body"></div>
   </dialog>
 </main>
@@ -711,14 +931,81 @@ async function doComply(){
   out.innerHTML = h;
 }
 
-async function openArticle(id){
+let dlgStack = [];   // çapraz atıf gezinmesi için geri yığını
+let dlgCurrent = null;
+
+// nav: 'new' = sonuç listesinden (yığını sıfırla), 'ref' = atıf bağlantısından
+// (mevcut maddeyi yığına koy), 'back' = geri düğmesinden (yığına dokunma)
+async function openArticle(id, nav){
+  nav = nav || 'new';
   const res = await fetch('/api/article?id='+id+'&terms='+encodeURIComponent(lastTerms.join(' '))).then(r=>r.json());
-  if(!res) return;
+  if(!res || res.error) return;
+  if(nav === 'new') dlgStack = [];
+  else if(nav === 'ref' && dlgCurrent !== null) dlgStack.push(dlgCurrent);
+  dlgCurrent = id;
+  document.getElementById('dlg-back').style.display = dlgStack.length ? '' : 'none';
   document.getElementById('dlg-title').textContent = res.doc + ' — ' + res.label + '  [' + res.doc_type + ']';
   document.getElementById('dlg-body').innerHTML =
     (res.comment ? '<div class="comment">💡 '+res.comment+'</div><br>' : '') + res.body_html;
-  dlg.showModal();
+  document.getElementById('dlg-body').scrollTop = 0;
+  if(!dlg.open) dlg.showModal();
 }
+
+function goBack(){
+  if(dlgStack.length) openArticle(dlgStack.pop(), 'back');
+}
+
+// atıf bağlantıları (dinamik içerik → event delegation)
+document.getElementById('dlg-body').addEventListener('click', e => {
+  const a = e.target.closest('a.ref');
+  if(a){ e.preventDefault(); openArticle(parseInt(a.dataset.ref), 'ref'); }
+});
+
+// --- kayıtlı aramalar ---
+async function loadSaved(){
+  const res = await fetch('/api/saved').then(r=>r.json());
+  renderChips(res.items);
+}
+
+function renderChips(items){
+  for(const mode of ['search','comply']){
+    const el = document.getElementById('chips-'+mode);
+    el.innerHTML = '';
+    for(const item of items.filter(i=>i.mode===mode)){
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.onclick = () => useSaved(mode, item.text);
+      const txt = document.createElement('span');
+      txt.className = 'txt'; txt.title = item.text; txt.textContent = '⭐ ' + item.text;
+      const del = document.createElement('button');
+      del.className = 'del'; del.title = 'Kaydı sil'; del.textContent = '✕';
+      del.onclick = (e) => { e.stopPropagation(); delSaved(mode, item.text); };
+      chip.append(txt, del);
+      el.append(chip);
+    }
+  }
+}
+
+function useSaved(mode, text){
+  if(mode==='search'){ document.getElementById('q').value = text; showTab('search'); doSearch(); }
+  else { document.getElementById('tx').value = text; showTab('comply'); doComply(); }
+}
+
+async function saveCurrent(mode){
+  const text = (mode==='search' ? document.getElementById('q') : document.getElementById('tx')).value.trim();
+  if(!text) return;
+  const res = await fetch('/api/saved', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'add', mode, text})}).then(r=>r.json());
+  renderChips(res.items);
+}
+
+async function delSaved(mode, text){
+  const res = await fetch('/api/saved', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'del', mode, text})}).then(r=>r.json());
+  renderChips(res.items);
+}
+
+loadSaved();
 
 async function loadStatus(){
   const s = await fetch('/api/status').then(r=>r.json());
@@ -781,6 +1068,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"error": "bulunamadı"}, 404)
         elif url.path == "/api/status":
             self._json({"folder": MEVZUAT_DIR, "docs": INDEX.docs})
+        elif url.path == "/api/saved":
+            self._json({"items": load_saved()})
         else:
             self._json({"error": "yok"}, 404)
 
@@ -798,6 +1087,20 @@ class Handler(BaseHTTPRequestHandler):
                 payload = {}
             terms, groups, checklist = INDEX.compliance(payload.get("text", ""))
             self._json({"terms": terms, "groups": groups, "checklist": checklist})
+        elif url.path == "/api/saved":
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except json.JSONDecodeError:
+                payload = {}
+            action = payload.get("action")
+            mode = payload.get("mode", "")
+            text = payload.get("text", "")
+            if action == "add":
+                self._json({"items": saved_add(mode, text)})
+            elif action == "del":
+                self._json({"items": saved_delete(mode, text)})
+            else:
+                self._json({"error": "geçersiz istek"}, 400)
         else:
             self._json({"error": "yok"}, 404)
 
