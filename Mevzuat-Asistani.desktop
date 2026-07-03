@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Mevzuat Asistanı
+Comment=Çevrimdışı vergi mevzuatı arama ve uyum kontrol aracı
+# NOT: Exec satırındaki yolu uygulamayı kopyaladığınız klasöre göre düzeltin
+# veya bu .desktop dosyasını uygulama klasörünün içinde bırakıp
+# "Çalıştırılabilir" olarak işaretleyin.
+Exec=bash -c 'cd "$(dirname %k)" && ./calistir.sh'
+Terminal=true
+Icon=accessories-dictionary
+Categories=Office;

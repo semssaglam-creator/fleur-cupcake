@@ -1,0 +1,25 @@
+BU BİR ÖRNEK DOSYADIR — gerçek mevzuat değildir.
+Kendi kanun, tebliğ, sirküler ve özelge dosyalarınızı (PDF, .docx, .txt)
+bu klasöre koyup uygulamadaki "Yeniden İndeksle" düğmesine basın.
+
+ÖRNEK VERGİ KANUNU
+
+Madde 1 - Bu örnek kanun, uygulamanın madde bölümleme ve arama özelliklerini
+denemeniz içindir. Gerçek bir hüküm içermez.
+
+Madde 2 - Binaların mesken olarak kiraya verilmesinden bir takvim yılı içinde
+elde edilen hasılatın belli bir tutarı gelir vergisinden müstesnadır. Bu
+istisna tutarı her yıl yeniden değerleme oranında artırılır.
+
+Madde 3 - Vergi ziyaına sebebiyet verildiği takdirde, mükellef veya sorumlu
+hakkında ziyaa uğratılan verginin bir katı tutarında vergi ziyaı cezası
+kesilir. Vergi ziyaına pişmanlık hükümlerine uygun olarak beyanda bulunulması
+hâlinde ceza kesilmez.
+
+Madde 4 - Beyanname, izleyen yılın Mart ayının başından yirmi beşinci günü
+akşamına kadar verilir. Süresinde verilmeyen beyannameler için usulsüzlük
+cezası uygulanır.
+
+GEÇİCİ MADDE 1 - Bu örnek dosya, uygulamayı ilk açtığınızda arama denemesi
+yapabilmeniz için eklenmiştir; kendi dosyalarınızı yükledikten sonra
+silebilirsiniz.
