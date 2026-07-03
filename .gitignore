@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# baslat.sh'nin oluşturduğu sanal ortam
+.venv/
+
+# Dönüştürme çıktıları
+*.docx
+*.xlsx
