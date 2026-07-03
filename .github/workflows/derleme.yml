@@ -1,0 +1,50 @@
+name: Tek dosyalık uygulama derle
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  derle:
+    # Eski glibc ile derlenen dosya daha çok dağıtımda çalışır
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sistem paketlerini kur
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-venv python3-tk \
+            tesseract-ocr tesseract-ocr-tur
+
+      - name: Uygulamayı derle
+        run: |
+          chmod +x derle.sh
+          ./derle.sh
+
+      - name: Paket oluştur
+        run: |
+          mkdir -p paket/pdf-donusturucu
+          cp dist/pdf-donusturucu paket/pdf-donusturucu/
+          cp README.md paket/pdf-donusturucu/
+          cd paket
+          tar czf ../pdf-donusturucu-linux-x86_64.tar.gz pdf-donusturucu
+          cd ..
+          zip -r pdf-donusturucu-linux-x86_64.zip paket/pdf-donusturucu
+
+      - name: Derlenen dosyaları yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-donusturucu-linux-x86_64
+          path: |
+            pdf-donusturucu-linux-x86_64.tar.gz
+            pdf-donusturucu-linux-x86_64.zip
+
+      - name: Sürüm yayınla (etiketli derlemelerde)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pdf-donusturucu-linux-x86_64.tar.gz
+            pdf-donusturucu-linux-x86_64.zip

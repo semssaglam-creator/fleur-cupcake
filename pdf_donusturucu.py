@@ -33,6 +33,76 @@ def _metin_duzelt(metin):
 
 
 # ---------------------------------------------------------------------------
+# OCR (taranmış PDF'ler için)
+# ---------------------------------------------------------------------------
+
+_OCR_DILI = None  # ilk kullanımda belirlenir; False = OCR kullanılamıyor
+
+
+def _tesseract_hazirla():
+    """Tesseract'ı bulur ve kullanılacak dili döndürür (yoksa False).
+
+    PyInstaller paketinde çalışıyorsak paket içindeki tesseract kullanılır,
+    aksi halde sistemdeki aranır. Türkçe dil paketi varsa Türkçe+İngilizce,
+    yoksa yalnızca İngilizce seçilir.
+    """
+    global _OCR_DILI
+    if _OCR_DILI is not None:
+        return _OCR_DILI
+
+    import shutil
+
+    try:
+        import pytesseract
+    except ImportError:
+        _OCR_DILI = False
+        return False
+
+    paket_dizini = getattr(sys, "_MEIPASS", None)
+    if paket_dizini:
+        aday = Path(paket_dizini) / "tesseract" / "tesseract"
+        if aday.exists():
+            pytesseract.pytesseract.tesseract_cmd = str(aday)
+            os.environ["TESSDATA_PREFIX"] = str(
+                Path(paket_dizini) / "tesseract" / "tessdata")
+
+    if (not paket_dizini or not (Path(paket_dizini) / "tesseract" /
+                                 "tesseract").exists()) \
+            and not shutil.which("tesseract"):
+        _OCR_DILI = False
+        return False
+
+    try:
+        diller = set(pytesseract.get_languages(config=""))
+    except Exception:
+        _OCR_DILI = False
+        return False
+
+    if "tur" in diller:
+        _OCR_DILI = "tur+eng" if "eng" in diller else "tur"
+    elif "eng" in diller:
+        _OCR_DILI = "eng"
+    else:
+        _OCR_DILI = False
+    return _OCR_DILI
+
+
+def _sayfa_ocr(sayfa):
+    """Sayfayı görüntüye çevirip OCR ile metnini okur. OCR yoksa '' döner."""
+    dil = _tesseract_hazirla()
+    if not dil:
+        return ""
+    import pytesseract
+    goruntu = sayfa.to_image(resolution=300).original
+    return _metin_duzelt(pytesseract.image_to_string(goruntu, lang=dil))
+
+
+def ocr_kullanilabilir():
+    """OCR motorunun kullanılabilir olup olmadığını döndürür."""
+    return bool(_tesseract_hazirla())
+
+
+# ---------------------------------------------------------------------------
 # Dönüştürme mantığı
 # ---------------------------------------------------------------------------
 
@@ -61,7 +131,7 @@ def _tablo_disindaki_metin(page, bolgeler):
     return _metin_duzelt(filtreli.extract_text() or "")
 
 
-def pdf_to_word(pdf_yolu, docx_yolu, ilerleme=None):
+def pdf_to_word(pdf_yolu, docx_yolu, ilerleme=None, ocr=True):
     """PDF dosyasını Word belgesine çevirir. Metinler paragraf, tablolar tablo olarak aktarılır."""
     import pdfplumber
     from docx import Document
@@ -77,6 +147,12 @@ def pdf_to_word(pdf_yolu, docx_yolu, ilerleme=None):
 
             bolgeler = _tablo_bolgeleri(sayfa)
             metin = _tablo_disindaki_metin(sayfa, bolgeler)
+
+            # Sayfada okunabilir metin yoksa taranmış olabilir → OCR dene
+            if ocr and not bolgeler and len(metin.strip()) < 20:
+                ocr_metni = _sayfa_ocr(sayfa)
+                if len(ocr_metni.strip()) > len(metin.strip()):
+                    metin = ocr_metni
 
             if metin.strip():
                 for satir in metin.splitlines():
@@ -102,7 +178,7 @@ def pdf_to_word(pdf_yolu, docx_yolu, ilerleme=None):
     belge.save(docx_yolu)
 
 
-def pdf_to_excel(pdf_yolu, xlsx_yolu, ilerleme=None):
+def pdf_to_excel(pdf_yolu, xlsx_yolu, ilerleme=None, ocr=True):
     """PDF dosyasını Excel çalışma kitabına çevirir.
 
     Her sayfa ayrı bir çalışma sayfasına yazılır. Tablolar hücrelere dağıtılır,
@@ -127,6 +203,12 @@ def pdf_to_excel(pdf_yolu, xlsx_yolu, ilerleme=None):
 
             bolgeler = _tablo_bolgeleri(sayfa)
             metin = _tablo_disindaki_metin(sayfa, bolgeler)
+
+            # Sayfada okunabilir metin yoksa taranmış olabilir → OCR dene
+            if ocr and not bolgeler and len(metin.strip()) < 20:
+                ocr_metni = _sayfa_ocr(sayfa)
+                if len(ocr_metni.strip()) > len(metin.strip()):
+                    metin = ocr_metni
 
             if metin.strip():
                 for satir in metin.splitlines():
@@ -160,7 +242,8 @@ def pdf_to_excel(pdf_yolu, xlsx_yolu, ilerleme=None):
     kitap.save(xlsx_yolu)
 
 
-def donustur(pdf_yolu, format_secimi, cikti_klasoru=None, ilerleme=None):
+def donustur(pdf_yolu, format_secimi, cikti_klasoru=None, ilerleme=None,
+             ocr=True):
     """Tek bir PDF dosyasını seçilen formata çevirir, oluşan dosyanın yolunu döndürür."""
     pdf_yolu = Path(pdf_yolu)
     if not pdf_yolu.exists():
@@ -171,10 +254,10 @@ def donustur(pdf_yolu, format_secimi, cikti_klasoru=None, ilerleme=None):
 
     if format_secimi == "word":
         hedef = klasor / (pdf_yolu.stem + ".docx")
-        pdf_to_word(str(pdf_yolu), str(hedef), ilerleme)
+        pdf_to_word(str(pdf_yolu), str(hedef), ilerleme, ocr)
     elif format_secimi == "excel":
         hedef = klasor / (pdf_yolu.stem + ".xlsx")
-        pdf_to_excel(str(pdf_yolu), str(hedef), ilerleme)
+        pdf_to_excel(str(pdf_yolu), str(hedef), ilerleme, ocr)
     else:
         raise ValueError(f"Bilinmeyen format: {format_secimi}")
 
@@ -246,6 +329,17 @@ def arayuz_baslat():
                     variable=format_degisken,
                     value="excel").pack(side="left", padx=10)
 
+    ocr_var = tk.BooleanVar(value=True)
+    ocr_kutusu = ttk.Checkbutton(
+        secenek_cerceve,
+        text="Taranmış sayfalar için OCR",
+        variable=ocr_var)
+    ocr_kutusu.pack(side="left", padx=10)
+    if not ocr_kullanilabilir():
+        ocr_var.set(False)
+        ocr_kutusu.config(state="disabled",
+                          text="OCR kullanılamıyor (tesseract yok)")
+
     # --- Çıktı klasörü ---
     cikti_cerceve = ttk.Frame(ana)
     cikti_cerceve.pack(fill="x", pady=4)
@@ -286,6 +380,7 @@ def arayuz_baslat():
         dosyalar = list(secili_dosyalar)
         secim = format_degisken.get()
         cikti = cikti_degisken.get() or None
+        ocr_secimi = ocr_var.get()
 
         def arka_plan():
             hatalar = []
@@ -302,7 +397,8 @@ def arayuz_baslat():
                             f"{ad} — sayfa {sayfa}/{toplam_sayfa}")))
 
                 try:
-                    hedef = donustur(pdf, secim, cikti, sayfa_ilerleme)
+                    hedef = donustur(pdf, secim, cikti, sayfa_ilerleme,
+                                     ocr=ocr_secimi)
                     basarili.append(str(hedef))
                 except Exception as hata:
                     hatalar.append(f"{ad}: {hata}")
@@ -348,6 +444,8 @@ def main():
                              help="Çıktı formatı (varsayılan: word)")
     ayristirici.add_argument("--cikti", default=None,
                              help="Çıktı klasörü (varsayılan: PDF'in yanı)")
+    ayristirici.add_argument("--ocr-kapali", action="store_true",
+                             help="Taranmış sayfalar için OCR kullanma")
     argumanlar = ayristirici.parse_args()
 
     if not argumanlar.pdf:
@@ -356,7 +454,8 @@ def main():
 
     for pdf in argumanlar.pdf:
         print(f"Dönüştürülüyor: {pdf} → {argumanlar.format} ...")
-        hedef = donustur(pdf, argumanlar.format, argumanlar.cikti)
+        hedef = donustur(pdf, argumanlar.format, argumanlar.cikti,
+                         ocr=not argumanlar.ocr_kapali)
         print(f"  Oluşturuldu: {hedef}")
 
 

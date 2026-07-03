@@ -9,8 +9,25 @@ Linux'ta tıkla-çalıştır şeklinde kullanılabilen basit bir masaüstü uygu
 - Metinler Word'de paragraf, Excel'de satır satır aktarılır
 - Her PDF sayfası Excel'de ayrı çalışma sayfası olur
 - Türkçe karakterler (ç, ğ, ı, İ, ö, ş, ü) tam desteklenir — hem içerikte hem dosya adlarında
+- **Taranmış PDF'ler otomatik OCR ile okunur** (Türkçe + İngilizce) — metin katmanı
+  olmayan sayfalar algılanıp görüntüden metne çevrilir
 
-## Kurulum (tek seferlik)
+## Seçenek 1: Hazır uygulama (hiçbir kurulum gerekmez) ⭐
+
+Derlenmiş tek dosyalık sürümü indirin: Python, tüm kütüphaneler ve OCR motoru
+dosyanın içindedir, bilgisayarınıza hiçbir şey kurmanız gerekmez.
+
+1. `pdf-donusturucu-linux-x86_64.tar.gz` dosyasını indirip çıkarın
+   (GitHub'da **Releases** veya **Actions** sekmesindeki derleme çıktılarından).
+2. `pdf-donusturucu` dosyasına çift tıklayın. Açılmazsa: sağ tık → Özellikler →
+   İzinler → "Program olarak çalıştırılabilir" kutusunu işaretleyin
+   (veya terminalde `chmod +x pdf-donusturucu`).
+
+> Yeni bir sürüm derlemek için: depo sayfasında **Actions →
+> "Tek dosyalık uygulama derle" → Run workflow**. Kendi bilgisayarınızda
+> derlemek isterseniz `./derle.sh` kullanın.
+
+## Seçenek 2: Kaynaktan kurulum (tek seferlik)
 
 1. Bu depoyu indirin (veya `git clone` yapın).
 2. Terminalde proje klasörüne girip şunu çalıştırın:
@@ -40,6 +57,13 @@ sudo dnf install python3 python3-tkinter
 sudo pacman -S python tk
 ```
 
+Kaynaktan çalıştırırken OCR de kullanmak isterseniz tesseract kurun
+(hazır uygulamada buna gerek yoktur, motor pakete dahildir):
+
+```bash
+sudo apt install tesseract-ocr tesseract-ocr-tur
+```
+
 ## Kullanım
 
 1. **➕ PDF Ekle** ile bir veya daha fazla PDF seçin.
@@ -52,12 +76,16 @@ sudo pacman -S python tk
 ```bash
 ./baslat.sh belge.pdf --format word
 ./baslat.sh rapor.pdf tablo.pdf --format excel --cikti ~/Belgeler
+./baslat.sh taranmis.pdf --format word --ocr-kapali   # OCR istemiyorsanız
 ```
+
+(Hazır uygulamada `./baslat.sh` yerine `./pdf-donusturucu` yazın.)
 
 ## Notlar
 
-- Uygulama, PDF içindeki **metin ve tabloları** çıkarır. Taranmış (resim olarak
-  kaydedilmiş) PDF'lerde metin bulunmadığı için çıktı boş olabilir; bu tür
-  dosyalar için önce OCR uygulanması gerekir.
+- Taranmış (resim olarak kaydedilmiş) sayfalar otomatik algılanır ve OCR ile
+  okunur. OCR sonucu, taramanın kalitesine bağlı olarak küçük hatalar
+  içerebilir. İstenirse arayüzdeki kutucuktan veya `--ocr-kapali` ile
+  kapatılabilir.
 - Karmaşık sayfa düzenleri (çok sütunlu dergi sayfaları vb.) birebir aynı
   görünümde aktarılamayabilir; içerik korunur, düzen sadeleştirilir.

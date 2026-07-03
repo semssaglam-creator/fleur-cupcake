@@ -5,6 +5,12 @@ __pycache__/
 # baslat.sh'nin oluşturduğu sanal ortam
 .venv/
 
+# derle.sh'nin oluşturduğu dosyalar
+.derleme-venv/
+build/
+dist/
+*.spec
+
 # Dönüştürme çıktıları
 *.docx
 *.xlsx
