@@ -13,6 +13,19 @@ uygulama bunları **madde madde** indeksler ve tarayıcınızda şunları sunar:
   hiyerarşisine göre gruplanır ve bir kontrol listesi üretilir.
 - 📄 **Tam metin görüntüleme** — herhangi bir sonuca tıklayınca ilgili madde
   metni, arama terimleri işaretlenmiş hâlde açılır.
+- 📌 **Uygulama zinciri (ters atıf)** — bir kanun maddesini açtığınızda
+  altında **"Bu maddeye atıf yapan düzenlemeler"** listesi görünür: o maddenin
+  uygulamasını açıklayan tebliğ bölümleri, sirkülerler ve özelgeler tek
+  tıkla önünüzdedir. "Kanun maddesini buldum, uygulaması hangi tebliğde?"
+  sorusunun doğrudan cevabıdır.
+- ⚠ **Değişiklik tespiti** — değiştirici tebliğlerdeki *"…Tebliğinin (2.1.)
+  bölümü aşağıdaki şekilde değiştirilmiştir"*, *"yürürlükten kaldırılmıştır"*
+  gibi kalıplar tanınır; **değiştirilen eski bölümün üzerine kırmızı uyarı**
+  iliştirilir ve değiştiren düzenlemeye bağlantı verilir. Böylece farkında
+  olmadan güncelliğini yitirmiş bir tebliğ bölümüne dayanma riski azalır.
+  Uyum kontrolünde de sonuçlar arasında değiştirilmiş bölüm varsa kontrol
+  listesinin başına uyarı eklenir. Resmî Gazete tarihi ve Seri No
+  ayrıştırılıp "Yüklü Mevzuat" tablosunda gösterilir.
 - 🔗 **Çapraz atıf takibi** — madde metnindeki "bu Kanunun 3 üncü maddesi",
   "213 sayılı Vergi Usul Kanununun 344 üncü maddesi", "mükerrer 355 inci
   maddesi" gibi atıflar otomatik tanınır ve **tıklanabilir bağlantıya**
@@ -86,6 +99,12 @@ adla eski dosyanın üzerine yazın. Uygulama açılışta ve her "Yeniden
   ilgili kanunları da yüklemeniz atıf takibini güçlendirir.
 
 ## Önemli uyarı
+
+Değişiklik tespiti kalıp tabanlıdır: standart dışı ifadeyle yapılan veya
+bölüm numarası verilmeden yapılan değişiklikler yakalanamayabilir. En sağlam
+yöntem, tebliğlerin mevzuat.gov.tr / GİB'deki **işlenmiş (birleşik) güncel
+metinlerini** yüklemek, değiştirici tebliğleri ise tarihçe izlemek
+istediğinizde eklemektir — uygulama iki durumda da çalışır.
 
 Bu araç bir **yardımcı bulma/tarama aracıdır**; hukuki görüş vermez.
 Otomatik yorumlar kural tabanlı hatırlatmalardır. Resmî işlemlerde daima

@@ -280,6 +280,61 @@ _CTX_TYPE_WORDS = [
 
 
 # ---------------------------------------------------------------------------
+# Değişiklik tespiti ("...Tebliğinin (2.1.) bölümü ... değiştirilmiştir")
+# ---------------------------------------------------------------------------
+
+# Uzun kalıplar önce gelmeli ("yürürlükten kaldırılmıştır" > "kaldırılmıştır")
+_AMEND_VERB_RE = re.compile(
+    r"yürürlükten kaldırılmıştır|değiştirilmiştir|eklenmiştir"
+    r"|çıkarılmıştır|kaldırılmıştır|mülga"
+)
+
+_AMEND_KIND = {
+    "yürürlükten kaldırılmıştır": "yürürlükten kaldırıldı",
+    "değiştirilmiştir": "değiştirildi",
+    "eklenmiştir": "yakınına ekleme yapıldı",
+    "çıkarılmıştır": "ibare/bölüm çıkarıldı",
+    "kaldırılmıştır": "kaldırıldı",
+    "mülga": "mülga edildi",
+}
+
+# "(2.1.) numaralı bölümü", "(3.1.2) bölümünün" → hedef bölüm numarası
+_AMEND_SECTION_RE = re.compile(
+    r"\(\s*(\d+(?:\.\d+){0,4})\.?\s*\)[^()]{0,50}?böl", re.IGNORECASE)
+# "3 üncü bölümü" biçimi
+_AMEND_SECTION_ORD_RE = re.compile(
+    r"(\d+(?:\.\d+){0,4})\s*(?:üncü|uncu|inci|ıncı|nci|ncı|ncu|ncü)\s+böl",
+    re.IGNORECASE)
+
+# Belge adında konu tespitinde anlamsız kelimeler (tür/kalıp kelimeleri)
+_SUBJECT_NOISE = {tr_fold(w) for w in (
+    "teblig", "tebligi", "tebliginde", "sirkuler", "sirkuleri", "ozelge",
+    "kanun", "kanunu", "kanununda", "yonetmelik", "yonetmeligi", "yonerge",
+    "genel", "uygulama", "degisiklik", "yapilmasina", "dair", "hakkinda",
+    "iliskin", "seri", "sira", "no", "ile", "ve", "vergi", "vergisi",
+)}
+
+
+def subject_tokens(name: str):
+    """Dosya adından belgenin konusunu ayırt eden kelimeleri çıkarır."""
+    return {t for t in tokenize(name)
+            if not t.isdigit() and len(t) >= 3 and t not in _SUBJECT_NOISE}
+
+
+# Resmî Gazete tarihi ve Seri No ayrıştırma (dosya adı + metin başı)
+_SERI_RE = re.compile(r"seri\s*no\s*[:.]?\s*\(?\s*(\d+)")
+_DATE_RE = re.compile(r"\b(\d{1,2})[./](\d{1,2})[./](\d{4})\b")
+
+
+def extract_doc_meta(filename: str, first_chunk: str):
+    hay = tr_fold(filename) + " " + tr_fold(first_chunk[:800])
+    seri = _SERI_RE.search(hay)
+    date = _DATE_RE.search(hay)
+    return (seri.group(1) if seri else None,
+            "%s.%s.%s" % date.groups() if date else None)
+
+
+# ---------------------------------------------------------------------------
 # Madde bölümleme
 # ---------------------------------------------------------------------------
 
@@ -460,6 +515,8 @@ class Index:
         self.mtimes = {}            # path -> mtime
         self.art_lookup = {}        # (doc_name, katlanmış etiket) -> article id
         self.doc_alias_map = []     # [(doc_name, doc_type, alias kümesi)]
+        self.cited_by = {}          # hedef id -> [atıf yapan id'ler]
+        self.amend_map = {}         # hedef id -> [{"src": id, "kind": str}]
         self.lock = threading.Lock()
 
     def needs_reindex(self) -> bool:
@@ -485,12 +542,14 @@ class Index:
                     continue
                 self.mtimes[path] = os.path.getmtime(path)
                 name = os.path.splitext(fn)[0]
-                entry = {"name": name, "file": fn, "type": "?", "articles": 0, "error": None}
+                entry = {"name": name, "file": fn, "type": "?", "articles": 0,
+                         "error": None, "seri_no": None, "date": None}
                 try:
                     text = read_document(path)
                     text = re.sub(r"\r\n?", "\n", text)
                     doc_type, rank = detect_doc_type(fn, text)
                     entry["type"] = doc_type
+                    entry["seri_no"], entry["date"] = extract_doc_meta(fn, text)
                     for label, body in split_articles(text):
                         if len(body.strip()) < 30:
                             continue
@@ -502,6 +561,16 @@ class Index:
                 except Exception as e:  # dosya bozuksa diğerlerini engelleme
                     entry["error"] = str(e)
                 self.docs.append(entry)
+
+            # tüm belgeler yüklendikten sonra: ters atıf dizini + değişiklik taraması
+            self.cited_by = {}
+            for art in self.articles:
+                for _s, _e, tid in self._find_refs(art):
+                    if tid is not None and tid != art.id:
+                        lst = self.cited_by.setdefault(tid, [])
+                        if art.id not in lst:
+                            lst.append(art.id)
+            self._scan_amendments()
 
     def search(self, query: str, limit: int = 30):
         terms = query_terms(query)
@@ -531,7 +600,7 @@ class Index:
         scored.sort(key=lambda x: -x[0])
         results = []
         for score, art, matched, total in scored[:limit]:
-            results.append({
+            r = {
                 "id": art.id,
                 "doc": art.doc,
                 "doc_type": art.doc_type,
@@ -541,7 +610,17 @@ class Index:
                 "hits": total,
                 "summary": highlight(html.escape(summarize(art.body, terms)), terms),
                 "comment": make_comment(art.body, art.doc_type),
-            })
+            }
+            warns = self._amend_info(art.id)
+            if warns:
+                srcs = []
+                for w in warns:
+                    s = w["doc"] + " " + w["label"]
+                    if s not in srcs:
+                        srcs.append(s)
+                r["amended"] = True
+                r["amend_srcs"] = "; ".join(srcs[:3])
+            results.append(r)
         return terms, results
 
     # -- çapraz atıf çözümleme ---------------------------------------------
@@ -616,6 +695,87 @@ class Index:
             refs.append((m.start(), m.end(), target_id))
         return refs
 
+    # -- değişiklik taraması -------------------------------------------------
+
+    def _amend_base_doc(self, context: str, current_doc: str):
+        """Değişiklik cümlesindeki hedef (değiştirilen) belgeyi bulur."""
+        ctx = tr_fold(context)
+        wanted_type = None
+        for word, tname in _CTX_TYPE_WORDS:
+            if word in ctx:
+                wanted_type = tname
+                break
+        others = [(n, t, a) for n, t, a in self.doc_alias_map if n != current_doc]
+        if wanted_type:
+            others = [o for o in others if o[1] == wanted_type]
+        if not others:
+            return None
+        # bağlamda açıkça anılan belge (kanun no / kısaltma / ad)
+        hints = set(_CTX_LAW_NUM_RE.findall(ctx))
+        ctx_toks = set(ctx.split())
+        for num, alts in _LAW_ALIASES.items():
+            if num in ctx_toks or any(a in ctx for a in alts):
+                hints.add(num)
+                hints.update(alts)
+        explicit = [n for n, _t, a in others if hints & a]
+        if explicit:
+            return explicit[0]
+        # "aynı/adı geçen/mezkûr Tebliğin" → mevcut belgeyle aynı konudaki belge
+        cur_subject = subject_tokens(current_doc)
+        scored = [(len(cur_subject & subject_tokens(n)), n) for n, _t, _a in others]
+        scored.sort(key=lambda x: -x[0])
+        if scored and scored[0][0] > 0:
+            return scored[0][1]
+        if len(others) == 1:
+            return others[0][0]
+        return None
+
+    def _scan_amendments(self):
+        """Tüm maddelerde değişiklik kalıplarını tarar; değiştirilen bölüme
+        değiştiren düzenlemeyi bağlayan haritayı kurar."""
+        self.amend_map = {}
+        for art in self.articles:
+            body = art.body
+            for m in _AMEND_VERB_RE.finditer(body):
+                kind = _AMEND_KIND.get(m.group(0), "değiştirildi")
+                context = body[max(0, m.start() - 260):m.start()]
+                base = self._amend_base_doc(context, art.doc)
+                if not base:
+                    continue
+                # bağlamdaki en son anılan hedef (bölüm numarası veya madde)
+                candidates = []
+                for sm in _AMEND_SECTION_RE.finditer(context):
+                    candidates.append((sm.start(), "bolum " + sm.group(1)))
+                for sm in _AMEND_SECTION_ORD_RE.finditer(context):
+                    candidates.append((sm.start(), "bolum " + sm.group(1)))
+                for rm in _REF_RE.finditer(context):
+                    prefix, num = rm.group(1), rm.group(2)
+                    key = ("madde " + num) if not prefix else (
+                        tr_fold(prefix) + " madde " + num)
+                    candidates.append((rm.start(), key))
+                if not candidates:
+                    continue
+                key = max(candidates, key=lambda c: c[0])[1]
+                target = self.art_lookup.get((base, key))
+                # bölüm birebir bulunamazsa üst bölüme iliştir (3.1.2 → 3.1)
+                while target is None and key.startswith("bolum") and "." in key:
+                    key = key.rsplit(".", 1)[0]
+                    target = self.art_lookup.get((base, key))
+                if target is None or target == art.id:
+                    continue
+                lst = self.amend_map.setdefault(target, [])
+                if not any(w["src"] == art.id and w["kind"] == kind for w in lst):
+                    lst.append({"src": art.id, "kind": kind})
+
+    def _amend_info(self, art_id: int):
+        """Bir madde için değişiklik uyarılarını okunur biçimde döndürür."""
+        out = []
+        for w in self.amend_map.get(art_id, [])[:10]:
+            src = self.articles[w["src"]]
+            out.append({"id": src.id, "doc": src.doc, "label": src.label,
+                        "kind": w["kind"]})
+        return out
+
     def _render_body(self, art, terms):
         """Gövdeyi HTML'e çevirir: vurgu + tıklanabilir çapraz atıflar."""
         parts = []
@@ -639,6 +799,19 @@ class Index:
         with self.lock:
             if 0 <= art_id < len(self.articles):
                 art = self.articles[art_id]
+                # ters atıf: bu maddeye atıf yapanlar — önce başka belgeler,
+                # sonra hiyerarşi sırası (kanun → tebliğ → ... → özelge)
+                cited = []
+                for src_id in self.cited_by.get(art.id, [])[:80]:
+                    s = self.articles[src_id]
+                    cited.append({
+                        "id": s.id, "doc": s.doc, "doc_type": s.doc_type,
+                        "label": s.label, "rank": s.rank,
+                        "same_doc": s.doc == art.doc,
+                    })
+                cited.sort(key=lambda c: (c["same_doc"], c["rank"], c["doc"]))
+                for c in cited:
+                    del c["rank"], c["same_doc"]
                 return {
                     "id": art.id,
                     "doc": art.doc,
@@ -646,6 +819,8 @@ class Index:
                     "label": art.label,
                     "body_html": self._render_body(art, terms),
                     "comment": make_comment(art.body, art.doc_type),
+                    "warnings": self._amend_info(art.id),
+                    "cited_by": cited[:50],
                 }
         return None
 
@@ -660,6 +835,8 @@ class Index:
             (rank for keys, name, rank in DOC_TYPES if name == kv[0]), default=8))
         checklist = []
         if results:
+            if any(r.get("amended") for r in results):
+                checklist.append("⚠ Sonuçlar arasında sonradan DEĞİŞTİRİLMİŞ bölümler var — kırmızı uyarılı maddeleri açıp değiştiren düzenlemeyi mutlaka inceleyin.")
             checklist.append("İşlem tarihinde ilgili hükümlerin yürürlükte olan hâlini teyit edin (aşağıdaki maddeler yüklü dosyaların tarihli sürümüne göredir).")
             if any(g[0] == "Kanun" for g in ordered):
                 checklist.append("Önce kanun hükmünü esas alın; tebliğ/sirküler/özelge yalnızca açıklayıcıdır.")
@@ -789,6 +966,12 @@ dialog::backdrop { background: rgba(15,30,45,.55); }
 a.ref { color: var(--accent); font-weight: 600; text-decoration: underline;
   text-decoration-style: dotted; text-underline-offset: 3px; cursor: pointer; }
 .ref-missing { border-bottom: 1px dotted var(--muted); cursor: help; }
+.amend { margin: 8px 0 0; padding: 8px 10px; background: #fdecea; color: #92211a;
+  border: 1px solid #f2b8b5; border-radius: 8px; font-size: .88rem; line-height: 1.45; }
+.amend a.ref { color: #92211a; }
+.citedhdr { font-weight: 700; color: var(--accent); margin: 16px 0 6px; }
+ul.citedby { margin: 0; padding-left: 4px; list-style: none; }
+ul.citedby li { margin: 7px 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: #e8eef4;
   color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
@@ -808,6 +991,8 @@ footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 18p
   .checklist { background: #142720; border-color: #1f3a2f; }
   .chip { background: #26313c; }
   a.ref { color: #7fd0a8; }
+  .amend { background: #3a1512; color: #ffb4a8; border-color: #5c2320; }
+  .amend a.ref { color: #ffb4a8; }
 }
 </style>
 </head>
@@ -888,6 +1073,7 @@ function resultCard(r){
     + '<span class="label">— '+esc(r.label)+'</span>'
     + '<span class="label" style="margin-left:auto">'+r.matched_terms+'/'+r.total_terms+' terim, '+r.hits+' geçiş</span></div>'
     + '<div class="summary">'+r.summary+'</div>'
+    + (r.amended ? '<div class="amend">⚠ Bu bölümü değiştiren düzenleme var: <b>'+esc(r.amend_srcs)+'</b> — maddeyi açıp güncel hâli kontrol edin.</div>' : '')
     + (r.comment ? '<div class="comment">💡 '+r.comment+'</div>' : '')
     + '</div>';
 }
@@ -945,8 +1131,19 @@ async function openArticle(id, nav){
   dlgCurrent = id;
   document.getElementById('dlg-back').style.display = dlgStack.length ? '' : 'none';
   document.getElementById('dlg-title').textContent = res.doc + ' — ' + res.label + '  [' + res.doc_type + ']';
-  document.getElementById('dlg-body').innerHTML =
-    (res.comment ? '<div class="comment">💡 '+res.comment+'</div><br>' : '') + res.body_html;
+  let h = '';
+  for(const w of (res.warnings || [])){
+    h += '<div class="amend">⚠ Bu bölüm <a class="ref" href="#" data-ref="'+w.id+'">'+
+      esc(w.doc)+' — '+esc(w.label)+'</a> ile <b>'+esc(w.kind)+'</b>. Güncel uygulama için değiştiren düzenlemeyi açın.</div>';
+  }
+  h += (res.comment ? '<div class="comment">💡 '+res.comment+'</div><br>' : '') + res.body_html;
+  if(res.cited_by && res.cited_by.length){
+    h += '<div class="citedhdr">📌 Bu maddeye atıf yapan düzenlemeler ('+res.cited_by.length+')</div><ul class="citedby">'
+      + res.cited_by.map(c =>
+        '<li>'+badge(c.doc_type)+' <a class="ref" href="#" data-ref="'+c.id+'">'+esc(c.doc)+' — '+esc(c.label)+'</a></li>'
+      ).join('') + '</ul>';
+  }
+  document.getElementById('dlg-body').innerHTML = h;
   document.getElementById('dlg-body').scrollTop = 0;
   if(!dlg.open) dlg.showModal();
 }
@@ -1012,8 +1209,8 @@ async function loadStatus(){
   document.getElementById('folder').textContent = s.folder;
   const el = document.getElementById('docs');
   if(!s.docs.length){ el.innerHTML = '<p class="empty">Henüz dosya yüklenmemiş.</p>'; return; }
-  el.innerHTML = '<table><tr><th>Dosya</th><th>Tür</th><th>Madde/Bölüm</th><th>Durum</th></tr>' +
-    s.docs.map(d=>'<tr><td>'+esc(d.file)+'</td><td>'+esc(d.type)+'</td><td>'+d.articles+'</td><td>'+
+  el.innerHTML = '<table><tr><th>Dosya</th><th>Tür</th><th>Tarih</th><th>Seri No</th><th>Madde/Bölüm</th><th>Durum</th></tr>' +
+    s.docs.map(d=>'<tr><td>'+esc(d.file)+'</td><td>'+esc(d.type)+'</td><td>'+esc(d.date||'—')+'</td><td>'+esc(d.seri_no||'—')+'</td><td>'+d.articles+'</td><td>'+
       (d.error?'<span class="err">'+esc(d.error)+'</span>':'✓')+'</td></tr>').join('') + '</table>';
 }
 
