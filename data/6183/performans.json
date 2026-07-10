@@ -1,0 +1,11 @@
+{
+  "kanun": "6183",
+  "olusturma": "2026-07-10",
+  "oturum_sayisi": 1,
+  "genel": {
+    "toplam_soru": 0,
+    "dogru": 0,
+    "yanlis": 0
+  },
+  "konular": {}
+}
