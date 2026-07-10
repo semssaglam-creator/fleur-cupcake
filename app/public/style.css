@@ -111,6 +111,17 @@ button {
 .konu-satir .sev { color: var(--soluk); font-size: 0.8rem; white-space: nowrap; }
 .ipucu { margin-top: 0.8rem; font-size: 0.8rem; color: var(--soluk); }
 
+/* Simülasyon */
+.sim-gecmis { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; }
+.sim-adim {
+  font-size: 0.82rem; color: var(--soluk); padding: 0.3rem 0.6rem;
+  border-left: 3px solid var(--pembe-acik); background: var(--zemin); border-radius: 0 6px 6px 0;
+}
+.sim-son-iyi { border: 2px solid var(--yesil); background: var(--yesil-acik); border-radius: 10px; padding: 0.9rem; }
+.sim-son-kotu { border: 2px solid var(--kirmizi); background: var(--kirmizi-acik); border-radius: 10px; padding: 0.9rem; }
+.sim-son-notr { border: 2px solid #1971c2; background: #e7f5ff; border-radius: 10px; padding: 0.9rem; }
+#btn-sim { margin-top: 0.6rem; }
+
 /* Kanun seçimi */
 .kanun-secimi { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
 .kanun-cip {

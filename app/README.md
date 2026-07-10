@@ -26,6 +26,16 @@ Node.js 18+ gerektirir. Farklı port için: `PORT=8080 npm start`
   48 soru; her soruda konu etiketi, madde dayanağı, seviye ve açıklama bulunur.
   Doğru cevap ve açıklama istemciye soru cevaplanmadan gönderilmez.
 - **Panel**: Toplam/doğru/başarı istatistikleri ve konu bazlı ilerleme çubukları.
+- **Süreç simülasyonu** (`data/simulasyon.json`): Kanundaki takip sürecini
+  borçlunun gözünden yaşatan, madde dayanaklı karar ağacı. 6183 için: kapsam
+  kontrolü (akitten doğan borçlar kapsam dışı, m.1), vade (m.37), gecikme zammı
+  (m.51-52), tecil (m.48), ödeme emri (m.55), itiraz (m.58), mal bildirimi
+  (m.59-60), hapisle tazyik (m.60), haciz ve satış (m.54, 62, 64) ile
+  zamanaşımı (m.102-104) dalları. Her adımda seçim yapılır; sonuç, dayandığı
+  madde rozetleriyle gösterilir. Yeni kanuna simülasyon eklemek için
+  `simulasyon.json` içine aynı şemayla (`baslangic` + `dugumler`) kanun
+  numarası anahtarıyla yeni bir ağaç eklemek yeterlidir — panel butonu
+  otomatik belirir.
 
 ## Veri dosyaları
 

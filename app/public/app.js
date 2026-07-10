@@ -20,6 +20,8 @@ const KONU_ADLARI = {
 let aktifSoru = null;
 let kanunlar = {};
 let secilenKanun = localStorage.getItem('kanun') || null;
+let simKanunlari = [];
+let aktifSim = null;
 
 async function api(yol, govde) {
   const secenek = govde
@@ -32,7 +34,7 @@ async function api(yol, govde) {
 }
 
 function ekranGoster(ad) {
-  for (const e of ['ekran-auth', 'ekran-panel', 'ekran-soru']) {
+  for (const e of ['ekran-auth', 'ekran-panel', 'ekran-soru', 'ekran-sim']) {
     $(e).classList.toggle('gizli', e !== ad);
   }
 }
@@ -98,12 +100,15 @@ function kanunSecimiCiz() {
   };
   for (const [no] of girisler) cip(no, no + ' sayılı Kanun');
   if (girisler.length > 1) cip('karisik', '🔀 Karışık');
+  // Seçili kanun için simülasyon varsa butonunu göster
+  $('btn-sim').classList.toggle('gizli', !simKanunlari.includes(secilenKanun));
 }
 
 async function panelYukle() {
   const ben = await api('/api/ben');
   if (Object.keys(kanunlar).length === 0) {
     kanunlar = (await api('/api/kanunlar')).kanunlar;
+    simKanunlari = (await api('/api/simulasyon')).kanunlar;
   }
   kanunSecimiCiz();
   $('kullanici-ad').textContent = ben.ad;
@@ -174,6 +179,54 @@ async function cevapla(i) {
   $('sonuc-baslik').textContent = sonuc.dogruMu ? '✅ Doğru!' : '❌ Yanlış';
   $('sonuc-aciklama').textContent = sonuc.aciklama;
   $('btn-sonraki').classList.remove('gizli');
+}
+
+// --- simülasyon ---
+
+$('btn-sim').onclick = simBaslat;
+$('btn-sim-panel').onclick = panelYukle;
+$('btn-sim-yeniden').onclick = () => simDugumGoster(aktifSim.baslangic, true);
+
+async function simBaslat() {
+  aktifSim = await api('/api/simulasyon/' + encodeURIComponent(secilenKanun));
+  $('sim-baslik').textContent = aktifSim.baslik;
+  simDugumGoster(aktifSim.baslangic, true);
+  ekranGoster('ekran-sim');
+}
+
+function simDugumGoster(id, sifirla) {
+  const gecmis = $('sim-gecmis');
+  if (sifirla) gecmis.innerHTML = '';
+  const d = aktifSim.dugumler[id];
+  const metin = $('sim-metin');
+  metin.textContent = d.metin;
+  metin.className = 'soru-metin' + (d.son ? ' sim-son-' + d.son : '');
+
+  const maddeler = $('sim-maddeler');
+  maddeler.innerHTML = '';
+  for (const m of d.maddeler || []) {
+    const r = document.createElement('span');
+    r.className = 'rozet';
+    r.textContent = '6183 SK ' + m;
+    maddeler.appendChild(r);
+  }
+
+  const kutu = $('sim-secenekler');
+  kutu.innerHTML = '';
+  for (const s of d.secenekler || []) {
+    const b = document.createElement('button');
+    b.className = 'secenek';
+    b.textContent = s.etiket;
+    b.onclick = () => {
+      const adim = document.createElement('div');
+      adim.className = 'sim-adim';
+      adim.textContent = '➜ ' + s.etiket;
+      gecmis.appendChild(adim);
+      simDugumGoster(s.hedef, false);
+    };
+    kutu.appendChild(b);
+  }
+  $('btn-sim-yeniden').classList.toggle('gizli', !d.son);
 }
 
 // Açılışta oturum kontrolü

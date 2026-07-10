@@ -92,6 +92,20 @@ app.get('/api/kanunlar', yetkiGerekli, (req, res) => {
   res.json({ kanunlar: KANUNLAR });
 });
 
+// --- simülasyon ---
+
+const simulasyonlar = require('./data/simulasyon.json');
+
+app.get('/api/simulasyon', yetkiGerekli, (req, res) => {
+  res.json({ kanunlar: Object.keys(simulasyonlar) });
+});
+
+app.get('/api/simulasyon/:kanun', yetkiGerekli, (req, res) => {
+  const sim = simulasyonlar[req.params.kanun];
+  if (!sim) return res.status(404).json({ hata: 'Bu kanun için simülasyon yok.' });
+  res.json(sim);
+});
+
 app.get('/api/soru', yetkiGerekli, (req, res) => {
   const kanun = req.query.kanun || Object.keys(KANUNLAR)[0];
   if (kanun !== 'karisik' && !KANUNLAR[kanun]) {

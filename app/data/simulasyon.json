@@ -1,0 +1,143 @@
+{
+  "6183": {
+    "baslik": "Amme Alacağı Takip Simülasyonu",
+    "aciklama": "Bir borçlunun gözünden 6183 sayılı Kanun'daki takip sürecini adım adım yaşa. Her seçimin sonucu, dayandığı madde ile birlikte gösterilir.",
+    "baslangic": "basla",
+    "dugumler": {
+      "basla": {
+        "metin": "100.000 TL borcun var. Ama önce en kritik soru: bu borç KİME ve NEREDEN doğdu? Çünkü 6183 sayılı Kanun her borca uygulanmaz.",
+        "maddeler": ["m.1"],
+        "secenekler": [
+          { "etiket": "Vergi dairesine gelir vergisi borcu", "hedef": "vade" },
+          { "etiket": "Belediyeye emlak vergisi borcu", "hedef": "vade" },
+          { "etiket": "Belediyeye dükkân kira borcu", "hedef": "kapsam-disi" },
+          { "etiket": "Devlet üniversitesine kantin kira borcu", "hedef": "kapsam-disi" }
+        ]
+      },
+      "kapsam-disi": {
+        "metin": "🔵 KAPSAM DIŞI! Bu borç bir sözleşmeden (akitten) doğuyor. 6183 SK m.1, amme idarelerinin 'akitten, haksız fiil ve haksız iktisaptan doğan' alacaklarını açıkça kapsam dışında bırakır. Belediye veya üniversite alacaklı olsa bile kira alacağını 6183'e göre değil, genel hükümlere göre (İcra ve İflas Kanunu yoluyla, gerekirse dava açarak) takip etmek zorundadır. Sana ödeme emri gönderemez, kendisi haciz uygulayamaz.",
+        "maddeler": ["m.1"],
+        "son": "notr"
+      },
+      "vade": {
+        "metin": "Borç kapsam içinde: vergi, resim, harç ve bunların fer'ileri 6183'e tabidir (m.1). Borcun vadesi geldi. Kural: amme alacakları hususi kanunlarındaki zamanda ödenir; özel kanunda süre yoksa tebliğden itibaren 1 AY içinde ödenir ve bu sürenin son günü VADE günüdür (m.37). Ne yapıyorsun?",
+        "maddeler": ["m.37"],
+        "secenekler": [
+          { "etiket": "Vadesinde ödüyorum", "hedef": "son-odedin" },
+          { "etiket": "Ödeyemiyorum, tecil (taksitlendirme) istiyorum", "hedef": "tecil-talep" },
+          { "etiket": "Ödemiyorum, bekleyeceğim", "hedef": "gecikme" }
+        ]
+      },
+      "son-odedin": {
+        "metin": "🟢 En temiz sonuç: borç vadesinde ödendi, gecikme zammı doğmadı, takip hiç başlamadı. (İstersen borcunu vadeden önce de ödeyebilirdin — m.37 son fıkra buna açıkça izin verir.)",
+        "maddeler": ["m.37", "m.40"],
+        "son": "iyi"
+      },
+      "gecikme": {
+        "metin": "Vade geçti. Andan itibaren borcun ödenmeyen kısmına HER AY için ayrı ayrı gecikme zammı işler (kanuni oran m.51'de %4; oran Cumhurbaşkanı kararıyla değiştirilebilir, güncel uygulama %3,7). Ay kesirleri günlük hesaplanır. Dikkat: gecikme zammının sana önceden bildirilmesi gerekmez (m.52) — 'haberim yoktu' diyemezsin. Bir süre sonra tebligat geldi: ÖDEME EMRİ (m.55). 15 gün içinde ya borcu ödeyecek ya da mal bildiriminde bulunacaksın. Ne yapıyorsun?",
+        "maddeler": ["m.51", "m.52", "m.55"],
+        "secenekler": [
+          { "etiket": "Gecikme zammıyla birlikte ödüyorum", "hedef": "son-gec-odedin" },
+          { "etiket": "Bu borç haksız! İtiraz ediyorum / dava açıyorum", "hedef": "itiraz" },
+          { "etiket": "Hiçbir şey yapmıyorum", "hedef": "sessiz" },
+          { "etiket": "Hiç tebligat gelmedi ve yıllar geçti…", "hedef": "son-zamanasimi" }
+        ]
+      },
+      "son-gec-odedin": {
+        "metin": "🟢 Borç kapandı ama vade sonrası geçen her ay için gecikme zammı da ödedin (m.51). Ders: aslın ödenmiş olması bile gecikme zammının takibine engel değildir (m.52) — zam ayrıca takip edilebilir.",
+        "maddeler": ["m.51", "m.52"],
+        "son": "iyi"
+      },
+      "itiraz": {
+        "metin": "Ödeme emrine karşı 15 gün içinde itiraz/dava hakkın var ama SEBEPLER SINIRLIDIR (m.58): (1) böyle bir borcun olmadığı, (2) borcu kısmen ödediğin, (3) borcun zamanaşımına uğradığı. 'Ödeyecek durumum yok' veya 'taksit istiyorum' geçerli itiraz sebebi DEĞİLDİR. Kısmi itirazda hangi kısma itiraz ettiğini açıkça göstermezsen itiraz edilmemiş sayılır. İtirazın en geç 7 gün içinde karara bağlanır. Sonuç ne oldu?",
+        "maddeler": ["m.58"],
+        "secenekler": [
+          { "etiket": "İtirazım kabul edildi (borç gerçekten yoktu)", "hedef": "son-itiraz-kabul" },
+          { "etiket": "İtirazım reddedildi", "hedef": "itiraz-ret" }
+        ]
+      },
+      "son-itiraz-kabul": {
+        "metin": "🟢 İtiraz kabul edildi, takip düştü. Bu konudaki kararlar kesindir (m.58). Haklı çıktığın için süreç burada biter.",
+        "maddeler": ["m.58"],
+        "son": "iyi"
+      },
+      "itiraz-ret": {
+        "metin": "İtirazın tamamen veya kısmen reddedildi. Şimdi kritik bir süre işliyor: ret kararının tebliğinden itibaren 15 GÜN içinde MAL BİLDİRİMİNDE bulunmak zorundasın (m.58). Ayrıca bil: borcun bir kısmına yapılan itiraz, mal bildirimi süresini uzatmaz. Ne yapıyorsun?",
+        "maddeler": ["m.58", "m.59"],
+        "secenekler": [
+          { "etiket": "Artık ödüyorum", "hedef": "son-gec-odedin" },
+          { "etiket": "Mal bildiriminde bulunuyorum", "hedef": "haciz-sureci" },
+          { "etiket": "Yine hiçbir şey yapmıyorum", "hedef": "tazyik" }
+        ]
+      },
+      "sessiz": {
+        "metin": "15 gün doldu: ne ödedin ne de mal bildiriminde bulundun. İki sonuç birden devreye girer: (1) Cebren tahsil süreci başlar (m.54). (2) Mal bildiriminde bulunmadığın için HAPİSLE TAZYİK riski doğar (m.60).",
+        "maddeler": ["m.54", "m.60"],
+        "secenekler": [
+          { "etiket": "Devam et — başıma ne gelecek?", "hedef": "tazyik" }
+        ]
+      },
+      "tazyik": {
+        "metin": "⚠️ Tahsil dairesinin yazılı talebi üzerine İCRA TETKİK MERCİİ HAKİMİ, mal bildiriminde bulununcaya kadar — bir defaya mahsus ve ÜÇ AYI geçmemek üzere — hapisle tazyikine karar verdi (m.60). Bu bir ceza değil, zorlama aracıdır: mal bildiriminde bulunduğun an sona erer. Ayrıca dikkat: gerçeğe aykırı bildirimde bulunursan bu kez gerçekten hapisle CEZALANDIRILIRSIN (m.55). Ne yapıyorsun?",
+        "maddeler": ["m.60", "m.55"],
+        "secenekler": [
+          { "etiket": "Pes, mal bildiriminde bulunuyorum", "hedef": "haciz-sureci" }
+        ]
+      },
+      "haciz-sureci": {
+        "metin": "Mal bildirimi yaptın: borca yetecek miktardaki malını, alacağını, gelirini bildirdin (m.59 — tüm mal varlığını değil, borca YETECEK miktarı). Ödeme hâlâ yok, bu yüzden tahsil dairesi cebren tahsile geçiyor (m.54): mahalli en büyük memurun tasdik ettiği HACİZ VARAKASI düzenlendi (m.64) ve amme alacağına yetecek miktardaki malın haczedildi (m.62). Son bir şansın var:",
+        "maddeler": ["m.54", "m.59", "m.62", "m.64"],
+        "secenekler": [
+          { "etiket": "Satıştan önce borcu kapatıyorum", "hedef": "son-gec-odedin" },
+          { "etiket": "Ödeyemiyorum, mallar satılsın", "hedef": "son-satis" }
+        ]
+      },
+      "son-satis": {
+        "metin": "🔴 Haczedilen mallar paraya çevrildi. Satış bedelinden borç aslı + gecikme zamları + takip masrafları (m.1 gereği takip masrafları da amme alacağıdır) tahsil edildi. Vadesinde ödemek yerine bu yolu seçmenin bedeli: aylarca işleyen gecikme zammı, masraflar ve malların cebri satışı.",
+        "maddeler": ["m.54", "m.62", "m.1"],
+        "son": "kotu"
+      },
+      "son-zamanasimi": {
+        "metin": "🔵 Teoride: amme alacağı, vadesinin rastladığı takvim yılını izleyen yılbaşından itibaren 5 YIL içinde tahsil edilmezse zamanaşımına uğrar (m.102). Ama gerçekte bu çok zordur: ödeme emri tebliği, haciz, mal bildirimi, teminata bağlama gibi işlemlerin HER BİRİ zamanaşımını keser ve süre izleyen yılbaşından yeniden başlar (m.103). Yurt dışında olduğun sürece ise zamanaşımı hiç işlemez (m.104). Bir de bil: zamanaşımından sonra kendi rızanla ödersen o ödeme kabul edilir (m.102).",
+        "maddeler": ["m.102", "m.103", "m.104"],
+        "son": "notr"
+      },
+      "tecil-talep": {
+        "metin": "Tecil (m.48) istiyorsun. Şartları: (1) ödeme/haciz/satış seni ÇOK ZOR DURUMA düşürecek olmalı, (2) YAZI ile istemelisin, (3) kanuni sınırı aşan borçlarda TEMİNAT göstermelisin. Kabul edilirse borç 72 aya kadar, FAİZ alınarak taksitlendirilebilir. İdare talebini değerlendirdi:",
+        "maddeler": ["m.48"],
+        "secenekler": [
+          { "etiket": "Tecil kabul edildi", "hedef": "tecil-kabul" },
+          { "etiket": "Tecil reddedildi", "hedef": "tecil-ret" }
+        ]
+      },
+      "tecil-kabul": {
+        "metin": "Tecil kabul edildi: borç faiziyle birlikte taksitlere bağlandı. Ama m.48'in son fıkrası keskin: tecil şartlarına uymaz, taksitleri aksatır veya değer kaybeden teminatı tamamlamazsan alacak MUACCEL olur — yani tüm borç bir anda geri gelir. Nasıl gidiyor?",
+        "maddeler": ["m.48"],
+        "secenekler": [
+          { "etiket": "Taksitleri düzenli ödüyorum", "hedef": "son-tecil-iyi" },
+          { "etiket": "Taksitleri aksattım", "hedef": "tecil-bozuldu" }
+        ]
+      },
+      "son-tecil-iyi": {
+        "metin": "🟢 Taksitler düzenli ödendi, borç tecil faiziyle birlikte kapandı. Haciz ve satış hiç gündeme gelmedi. Ödeme güçlüğünde en akılcı yol genellikle budur.",
+        "maddeler": ["m.48"],
+        "son": "iyi"
+      },
+      "tecil-bozuldu": {
+        "metin": "Tecil şartlarına uyulmadı: alacak MUACCEL oldu (m.48 son fıkra). Kalan borcun tamamı derhal istenebilir hale geldi ve normal takip süreci kaldığı yerden başlıyor: gecikme zammı + ödeme emri…",
+        "maddeler": ["m.48"],
+        "secenekler": [
+          { "etiket": "Devam et", "hedef": "gecikme" }
+        ]
+      },
+      "tecil-ret": {
+        "metin": "Tecil talebin reddedildi. Ama m.48 sana bir çıkış bırakır: reddin tebliğinden itibaren idarece 30 GÜNE KADAR verilebilecek ödeme süresi içinde ödersen, alacak ödediğin tarihe kadar faiz alınarak tecil edilmiş sayılır. Ne yapıyorsun?",
+        "maddeler": ["m.48"],
+        "secenekler": [
+          { "etiket": "Bu süre içinde ödüyorum", "hedef": "son-gec-odedin" },
+          { "etiket": "Yine ödemiyorum", "hedef": "gecikme" }
+        ]
+      }
+    }
+  }
+}

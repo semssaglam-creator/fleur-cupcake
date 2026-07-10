@@ -47,11 +47,27 @@
       </div>
       <div id="kanun-secimi" class="kanun-secimi"></div>
       <button id="btn-basla" class="birincil buyuk">Soru Çöz</button>
+      <button id="btn-sim" class="ikincil buyuk gizli">⚖️ Süreç Simülasyonu</button>
     </div>
     <div class="kart" id="konu-karti">
       <h3>Konu Durumu</h3>
       <div id="konu-listesi" class="konu-listesi"></div>
       <p class="ipucu">Zayıf konulardan daha sık soru gelir; seviye her konuda ayrı ilerler (1–4).</p>
+    </div>
+  </section>
+
+  <!-- Simülasyon -->
+  <section id="ekran-sim" class="gizli">
+    <div class="kart">
+      <h3 id="sim-baslik"></h3>
+      <div id="sim-gecmis" class="sim-gecmis"></div>
+      <div id="sim-maddeler" class="soru-ust"></div>
+      <p id="sim-metin" class="soru-metin"></p>
+      <div id="sim-secenekler" class="secenekler"></div>
+      <div class="soru-alt">
+        <button id="btn-sim-panel" class="ikincil">Panele Dön</button>
+        <button id="btn-sim-yeniden" class="birincil gizli">↻ Baştan Oyna</button>
+      </div>
     </div>
   </section>
 
