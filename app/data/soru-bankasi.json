@@ -1,0 +1,341 @@
+{
+  "kanun": "6183",
+  "sorular": [
+    {
+      "id": 1, "konu": "kapsam-tanimlar", "madde": "1", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Aşağıdaki alacaklardan hangisi 6183 sayılı Kanun kapsamına girmez?",
+      "secenekler": ["Devlete ait vergi, resim ve harçlar", "Vergi cezaları ve para cezaları", "Gecikme zammı ve faiz gibi fer'i amme alacakları", "Belediyenin kira sözleşmesinden doğan alacağı", "Ceza tahkik ve takiplerine ait muhakeme masrafı"],
+      "dogru": 3,
+      "aciklama": "6183 SK m.1 — Akitten, haksız fiil ve haksız iktisaptan doğan alacaklar kanun kapsamı dışındadır. Kira sözleşmesinden doğan alacak akitten doğduğu için kapsama girmez."
+    },
+    {
+      "id": 2, "konu": "kapsam-tanimlar", "madde": "1", "seviye": 1, "format": "dogru-yanlis",
+      "soru": "Devlet, il özel idareleri (vilayet hususi idareleri) ve belediyeler, 6183 sayılı Kanun kapsamındaki alacaklı amme idareleridir.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.1 — Kanun; Devlete, vilayet hususi idarelerine ve belediyelere ait amme alacaklarını kapsar."
+    },
+    {
+      "id": 3, "konu": "teminat", "madde": "10", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi 6183 sayılı Kanun'un 10. maddesinde sayılan teminat türlerinden biri değildir?",
+      "secenekler": ["Para", "Bankalar tarafından verilen süresiz ve şartsız teminat mektupları", "Hazinece ihraç edilen Devlet iç borçlanma senetleri", "Hükümetçe belli edilecek Milli esham ve tahvilat", "Borçlunun ciro ettiği müşteri çekleri"],
+      "dogru": 4,
+      "aciklama": "6183 SK m.10 — Teminat olarak para, banka teminat mektupları ve sigorta şirketi kefalet senetleri, Devlet iç borçlanma senetleri, Milli esham ve tahvilat ile haczedilen menkul ve gayrimenkul mallar kabul edilir. Müşteri çeki listede yoktur."
+    },
+    {
+      "id": 4, "konu": "teminat", "madde": "10", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Teminat olarak gösterilen Milli esham ve tahvilat, teminatın kabul edilmesine en yakın borsa cetvelleri üzerinden yüzde kaç noksanıyla değerlendirilir?",
+      "secenekler": ["%5", "%10", "%15", "%20", "%25"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.10/4 — Milli esham ve tahvilat, en yakın borsa cetvelleri üzerinden %15 noksanıyla değerlendirilir."
+    },
+    {
+      "id": 5, "konu": "teminat", "madde": "11", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Tahsil dairesi, borçlunun gösterdiği şahsi kefili kabul etmek zorundadır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.11 — Şahsi kefaleti ve gösterilen şahsı kabul edip etmemekte alacaklı tahsil dairesi muhtardır (serbesttir)."
+    },
+    {
+      "id": 6, "konu": "teminat", "madde": "12", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Bar, otel, han, pansiyon gibi müesseselerdeki eşya ve malzeme hangi amme borçlarına karşı teminat hükmündedir?",
+      "secenekler": ["Sahibinin tüm amme borçlarına karşı", "Yalnızca bu müesseselerin işletilmesinden doğan amme borçlarına karşı", "Sahibinin gelir vergisi borçlarına karşı", "Müessesede çalışanların amme borçlarına karşı", "Hiçbir borca karşı; bu mallar haczedilemez"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.12 — Bu yerlerdeki eşya ve malzeme, müesseselerin işletilmesinden doğan amme borçlarına karşı teminat hükmündedir. Misafir ve kiracıların kendilerine ait eşyaları hariçtir."
+    },
+    {
+      "id": 7, "konu": "ihtiyati-haciz", "madde": "13", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "İhtiyati haciz kimin kararıyla tatbik olunur?",
+      "secenekler": ["Vergi dairesi müdürünün", "Alacaklı amme idaresinin mahalli en büyük memurunun", "İcra tetkik mercii hakiminin", "Defterdarın yazılı talebi üzerine Cumhurbaşkanının", "Vergi itiraz komisyonunun"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.13 — İhtiyati haciz, hiçbir müddetle mukayyet olmaksızın alacaklı amme idaresinin mahalli en büyük memurunun kararıyla derhal tatbik olunur."
+    },
+    {
+      "id": 8, "konu": "ihtiyati-haciz", "madde": "13", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi ihtiyati haciz sebeplerinden biri değildir?",
+      "secenekler": ["Borçlunun belli ikametgâhının olmaması", "Borçlunun kaçması veya mallarını kaçırması ihtimalinin bulunması", "Teminat istenmesini gerektiren hallerin mevcut olması", "Borçlunun tecil talebinin reddedilmiş olması", "Mal bildirimine çağrılan borçlunun süresinde bildirimde bulunmaması"],
+      "dogru": 3,
+      "aciklama": "6183 SK m.13 — Tecil talebinin reddi ihtiyati haciz sebepleri arasında sayılmamıştır. Diğer dört hal maddede açıkça sayılır."
+    },
+    {
+      "id": 9, "konu": "ihtiyati-haciz", "madde": "15", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Haklarında ihtiyati haciz tatbik olunanlar, haczin tatbiki (gıyapta yapılan hacizlerde tebliği) tarihinden itibaren kaç gün içinde ihtiyati haciz sebebine itiraz edebilirler?",
+      "secenekler": ["7 gün", "10 gün", "15 gün", "30 gün", "60 gün"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.15 — İtiraz süresi 15 gündür (7061 sayılı Kanunla 7 günden 15 güne çıkarılmıştır, yürürlük 1/1/2018)."
+    },
+    {
+      "id": 10, "konu": "ihtiyati-haciz", "madde": "16", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Borçlu, 10. maddede sayılan herhangi bir teminatı gösterdiği takdirde ihtiyati haciz kaldırılır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.16 — Teminat gösterilmesi halinde ihtiyati haciz kaldırılır; ancak 10. maddenin 5. bendinde yazılı menkul mallar bu teminatın DIŞINDA tutulmuştur. Yani 'herhangi bir teminat' ifadesi yanlıştır."
+    },
+    {
+      "id": 11, "konu": "ihtiyati-tahakkuk", "madde": "17", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "İhtiyati tahakkuk emrini kim verir?",
+      "secenekler": ["Vergi dairesi müdürünün yazılı talebi üzerine defterdar ve/veya vergi dairesi başkanı", "Mahalli en büyük memur", "Maliye Bakanı", "Vergi itiraz komisyonu", "Takdir komisyonu"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.17 — Vergi dairesi müdürünün yazılı talebi üzerine defterdar ve/veya vergi dairesi başkanı, henüz tahakkuk etmemiş vergi ve resimlerin derhal tahakkuk ettirilmesi hususunda yazılı emir verebilir."
+    },
+    {
+      "id": 12, "konu": "ihtiyati-tahakkuk", "madde": "18", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "İhtiyati tahakkuk üzerine tahakkuk eden vergi ve resimler, kanunlarına göre ödeme zamanları gelmeden tahsil olunmaz; ancak bunlar için derhal ihtiyati haciz tatbik olunur.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.18/3 — İhtiyati tahakkuk alacağı tahsil edilebilir hale getirmez; ödeme zamanı gelmeden tahsil olunmaz, fakat derhal ihtiyati haciz tatbik olunur."
+    },
+    {
+      "id": 13, "konu": "korunma-hukumleri", "madde": "21", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Üçüncü şahıslar tarafından haczedilen mallar paraya çevrilmeden önce o mal üzerine amme alacağı için de haciz konulursa ne olur?",
+      "secenekler": ["Amme alacağı önce ödenir, kalan üçüncü şahıslara dağıtılır", "Amme alacağı hacze iştirak eder ve satış bedeli garameten (orantılı) taksim olunur", "Üçüncü şahısların haczi düşer", "Amme alacağı sıradan çıkarılır, ancak dava açabilir", "Mal iki ayrı satışla paraya çevrilir"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.21/1 — Amme alacağı hacze iştirak eder ve satış bedeli aralarında garameten taksim olunur."
+    },
+    {
+      "id": 14, "konu": "korunma-hukumleri", "madde": "21", "seviye": 4, "format": "dogru-yanlis",
+      "soru": "Gümrük resmi, bina ve arazi vergisi gibi eşya ve gayrimenkulün aynından doğan amme alacakları, o eşya ve gayrimenkulün bedelinden tahsilinde rehinli alacaklardan önce gelir.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.21/2 (7101 sayılı Kanunla değişik) — Eşya ve gayrimenkulün aynından doğan amme alacakları, rehinli alacaklardan SONRA gelir. 2018 değişikliğinden önce önce geliyordu; güncel metne dikkat."
+    },
+    {
+      "id": 15, "konu": "korunma-hukumleri", "madde": "35", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Limited şirket ortakları, şirketten tamamen veya kısmen tahsil edilemeyen amme alacağından nasıl sorumlu olur?",
+      "secenekler": ["Borcun tamamından müteselsilen", "Sermaye hisseleri oranında doğrudan doğruya", "Eşit paylarla", "Yalnızca müdür sıfatı taşıyan ortaklar sorumludur", "Sorumlulukları yoktur; yalnızca şirket takip edilir"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.35 — Limited şirket ortakları, tahsil edilemeyen amme alacağından sermaye hisseleri oranında doğrudan doğruya sorumlu olur ve bu Kanun hükümlerince takibe tabi tutulurlar."
+    },
+    {
+      "id": 16, "konu": "korunma-hukumleri", "madde": "mük.35", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Kanuni temsilciler, mükerrer 35. madde gereğince ödedikleri tutarlar için asıl amme borçlusuna rücu edemezler.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK mük. m.35 — Temsilciler, teşekkülü idare edenler veya mümessiller, ödedikleri tutarlar için asıl amme borçlusuna rücu EDEBİLİRLER."
+    },
+    {
+      "id": 17, "konu": "korunma-hukumleri", "madde": "mük.35", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Tüzel kişinin tasfiye edilmiş olması, kanuni temsilcilerin tasfiyeye giriş tarihinden önceki zamanlara ait sorumluluklarını ortadan kaldırır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK mük. m.35/3 — Tüzel kişilerin tasfiye haline girmiş veya tasfiye edilmiş olmaları, kanuni temsilcilerin tasfiyeye giriş tarihinden önceki zamanlara ait sorumluluklarını KALDIRMAZ."
+    },
+    {
+      "id": 18, "konu": "odeme", "madde": "37", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Hususi kanunlarında ödeme zamanı tespit edilmemiş amme alacakları ne zaman ödenir?",
+      "secenekler": ["Tebliğden itibaren 15 gün içinde", "Tebliğden itibaren 1 ay içinde", "Tebliğden itibaren 3 ay içinde", "Tahakkuktan itibaren 1 yıl içinde", "Maliye Bakanlığının belirleyeceği herhangi bir tarihte"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.37/2 — Hususi kanunlarında ödeme zamanı tespit edilmemiş amme alacakları, yapılacak tebliğden itibaren bir ay içinde ödenir."
+    },
+    {
+      "id": 19, "konu": "odeme", "madde": "37", "seviye": 1, "format": "dogru-yanlis",
+      "soru": "Ödeme müddetinin son günü, amme alacağının vadesi günüdür ve borçlu isterse borcunu vadeden önce ödeyebilir.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.37/3-4 — Ödeme müddetinin son günü vade günüdür; amme borçlusu isterse borcunu belli zamanlardan önce ödeyebilir."
+    },
+    {
+      "id": 20, "konu": "tecil-gecikme-zammi", "madde": "48", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Amme alacağı en fazla kaç ayı geçmemek üzere tecil olunabilir?",
+      "secenekler": ["24 ay", "36 ay", "48 ay", "60 ay", "72 ay"],
+      "dogru": 4,
+      "aciklama": "6183 SK m.48/1 — Amme alacağı 72 ayı geçmemek üzere ve faiz alınarak tecil olunabilir (metindeki güncel değere göre; 7582 sayılı Kanunla 36 aydan 72 aya çıkarılmıştır)."
+    },
+    {
+      "id": 21, "konu": "tecil-gecikme-zammi", "madde": "48", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi tecilin şartlarından biri değildir?",
+      "secenekler": ["Ödeme/haciz/satışın borçluyu çok zor duruma düşürecek olması", "Borçlunun yazı ile istemde bulunması", "Teminat gösterilmesi (kanuni sınırın üzerindeki borçlarda)", "Faiz alınması", "Borçlunun daha önce mal bildiriminde bulunmuş olması"],
+      "dogru": 4,
+      "aciklama": "6183 SK m.48/1 — Tecil; çok zor durum, yazılı istek ve teminat şartlarına bağlıdır ve faiz alınarak yapılır. Mal bildirimi tecil şartı değildir."
+    },
+    {
+      "id": 22, "konu": "tecil-gecikme-zammi", "madde": "48", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Tecil talebi reddedilen borçlu, borcunu reddin tebliği tarihinden itibaren idarece 30 güne kadar verilebilecek ödeme süresi içinde öderse, alacak ödendiği tarihe kadar faiz alınmak suretiyle tecil olunmuş sayılır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.48/4 — Talebi reddedilen borçlu, reddin tebliğinden itibaren idarece 30 güne kadar verilebilecek ödeme süresi içinde öderse amme alacağı ödendiği tarihe kadar faiz alınarak tecil olunur."
+    },
+    {
+      "id": 23, "konu": "tecil-gecikme-zammi", "madde": "51", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Ay kesirlerine isabet eden gecikme zammı günlük olarak hesap edilir.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.51/1 — Gecikme zammı her ay için ayrı ayrı uygulanır; ay kesirlerine isabet eden gecikme zammı günlük olarak hesap edilir."
+    },
+    {
+      "id": 24, "konu": "tecil-gecikme-zammi", "madde": "51", "seviye": 4, "format": "coktan-secmeli",
+      "soru": "Gecikme zammının ceza mahiyetindeki amme alacaklarına uygulanmasıyla ilgili aşağıdakilerden hangisi doğrudur?",
+      "secenekler": ["Tüm ceza alacaklarına tam oranda uygulanır", "Hiçbir ceza alacağına uygulanmaz", "Vergi ziyaı cezalarına belirlenen oranda, mahkemelerce verilen ceza mahiyetindeki alacaklara yarı oranda uygulanır; diğer cezalara uygulanmaz", "Yalnızca adli para cezalarına uygulanır", "Cezalara gecikme zammı yerine gecikme faizi uygulanır"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.51/3 — Gecikme zammı; vergi ziyaı cezalarında belirlenen oranda, mahkemeler tarafından verilen ceza mahiyetindeki amme alacaklarında bu oranın yarısı ölçüsünde uygulanır. Bunların dışındaki ceza mahiyetindeki amme alacaklarına tatbik edilmez."
+    },
+    {
+      "id": 25, "konu": "tecil-gecikme-zammi", "madde": "52", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Gecikme zammının önceden borçluya bildirilmesi gerekir ve borç aslının ödenmiş olması gecikme zammının takibine engel olur.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.52 — Gecikme zammının önceden borçluya bildirilmesi GEREKMEZ ve aslın ödenmiş olması gecikme zammının takip ve tahsiline MANİ DEĞİLDİR. Her iki önerme de metnin tersidir."
+    },
+    {
+      "id": 26, "konu": "cebren-tahsil", "madde": "54", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi 6183 sayılı Kanun'da sayılan cebren tahsil şekillerinden biri değildir?",
+      "secenekler": ["Teminatın paraya çevrilmesi", "Kefilin takibi", "Borçlunun mallarının haczedilerek paraya çevrilmesi", "Borçlunun iflasının istenmesi", "Borçlunun konkordato ilan etmeye zorlanması"],
+      "dogru": 4,
+      "aciklama": "6183 SK m.54 — Cebren tahsil üç şekilde yapılır: (1) teminatın paraya çevrilmesi yahut kefilin takibi, (2) haciz ve paraya çevirme, (3) iflasın istenmesi. Konkordatoya zorlama bir cebren tahsil şekli değildir."
+    },
+    {
+      "id": 27, "konu": "odeme-emri", "madde": "55", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Ödeme emri ile borçluya, kaç gün içinde borcunu ödemesi veya mal bildiriminde bulunması gerektiği tebliğ olunur?",
+      "secenekler": ["7 gün", "10 gün", "15 gün", "30 gün", "1 ay"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.55 — Vadesinde ödemeyenlere 15 gün içinde borçlarını ödemeleri veya mal bildiriminde bulunmaları lüzumu ödeme emri ile tebliğ olunur (7061 sayılı Kanunla 7 günden 15 güne çıkarılmıştır)."
+    },
+    {
+      "id": 28, "konu": "odeme-emri", "madde": "58", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi ödeme emrine karşı ileri sürülebilecek itiraz sebeplerinden biri değildir?",
+      "secenekler": ["Böyle bir borcun olmadığı", "Borcun kısmen ödendiği", "Borcun zamanaşımına uğradığı", "Borcun tecil edilmesi gerektiği", "Hiçbiri; hepsi itiraz sebebidir"],
+      "dogru": 3,
+      "aciklama": "6183 SK m.58/1 — İtiraz sebepleri sınırlıdır: böyle bir borcu olmadığı, kısmen ödediği veya zamanaşımına uğradığı. Tecil talebi bir itiraz sebebi değildir."
+    },
+    {
+      "id": 29, "konu": "odeme-emri", "madde": "58", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "İtiraz komisyonu, ödeme emrine yapılan itirazları en geç kaç gün içinde karara bağlamak zorundadır?",
+      "secenekler": ["7 gün", "10 gün", "15 gün", "30 gün", "45 gün"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.58/4 — İtiraz komisyonu bu itirazları en geç 7 gün içinde karara bağlamak mecburiyetindedir."
+    },
+    {
+      "id": 30, "konu": "odeme-emri", "madde": "58", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Borcun bir kısmına itiraz eden borçlunun, itiraz ettiği kısmın cihet ve miktarını açıkça göstermemesi halinde itiraz edilmemiş sayılır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.58/2 — Kısmi itirazda o kısmın cihet ve miktarının açıkça gösterilmesi gerekir; aksi halde itiraz edilmemiş sayılır."
+    },
+    {
+      "id": 31, "konu": "odeme-emri", "madde": "58", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Ödeme emrine itirazı tamamen veya kısmen reddedilen borçlu, ret kararının tebliği tarihinden itibaren kaç gün içinde mal bildiriminde bulunmak zorundadır?",
+      "secenekler": ["7 gün", "10 gün", "15 gün", "30 gün", "2 ay"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.58/6 — İtirazın tamamen veya kısmen reddi halinde borçlu, ret kararının tebliğinden itibaren 15 gün içinde mal bildiriminde bulunmak mecburiyetindedir."
+    },
+    {
+      "id": 32, "konu": "odeme-emri", "madde": "56", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Karşılığında teminat gösterilmiş amme alacağı vadesinde ödenmezse izlenecek usul nedir?",
+      "secenekler": ["Doğrudan teminat paraya çevrilir", "Ödeme emri tebliğ edilir, 15 gün beklenir, sonra teminat paraya çevrilir", "Borcun 15 gün içinde ödenmesi, aksi halde teminatın paraya çevrileceği borçluya bildirilir", "Borçlunun iflası istenir", "Teminat iade edilip haciz yoluna geçilir"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.56 — Teminatlı alacaklarda takip ödeme emriyle değil, borcun 15 gün içinde ödenmesi aksi halde teminatın paraya çevrileceği bildirimi ile yapılır."
+    },
+    {
+      "id": 33, "konu": "mal-bildirimi", "madde": "59", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Mal bildiriminde borçlu, sahip olduğu tüm mal, alacak ve haklarını eksiksiz bildirmek zorundadır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.59 — Mal bildirimi, borçlunun mal, alacak ve haklarından BORCUNA YETECEK MİKTARIN bildirilmesidir; tüm mal varlığının değil."
+    },
+    {
+      "id": 34, "konu": "mal-bildirimi", "madde": "60", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Mal bildiriminde bulunmayan borçlu hakkındaki hapisle tazyik kararını kim verir?",
+      "secenekler": ["Tahsil dairesi", "Cumhuriyet Savcısı", "İcra tetkik mercii hakimi", "Sulh ceza hakimi", "Vergi mahkemesi"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.60 — Hapisle tazyik kararı, tahsil dairesinin yazılı talebi üzerine İCRA TETKİK MERCİİ HAKİMİ tarafından verilir; Cumhuriyet Savcılığınca derhal infaz olunur."
+    },
+    {
+      "id": 35, "konu": "mal-bildirimi", "madde": "60", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Mal bildiriminde bulunmayan borçlu, mal bildiriminde bulununcaya kadar en fazla ne kadar süreyle hapisle tazyik olunabilir?",
+      "secenekler": ["1 ay", "45 gün", "2 ay", "3 ay", "6 ay"],
+      "dogru": 3,
+      "aciklama": "6183 SK m.60 — Bir defaya mahsus olmak ve ÜÇ AYI geçmemek üzere hapisle tazyik olunur."
+    },
+    {
+      "id": 36, "konu": "mal-bildirimi", "madde": "61", "seviye": 1, "format": "coktan-secmeli",
+      "soru": "Malı olmadığını bildiren borçlu, sonradan edindiği malları ve gelirindeki artışları kaç gün içinde tahsil dairesine bildirmek zorundadır?",
+      "secenekler": ["7 gün", "10 gün", "15 gün", "30 gün", "3 ay"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.61 — Sonradan edinilen mallar ile gelirdeki artışlar, edinme ve artma tarihinden başlayarak 15 gün içinde bildirilmelidir."
+    },
+    {
+      "id": 37, "konu": "haciz", "madde": "64", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Haciz muameleleri neye dayanılarak yapılır?",
+      "secenekler": ["Tahsil dairesinin sözlü emrine", "Mahalli en büyük memur veya tevkil edeceği memur tarafından tasdik edilen haciz varakalarına", "Vergi mahkemesi kararına", "İcra müdürlüğünün haciz tutanağına", "Defterdarlık onaylı ödeme emrine"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.64 — Haciz muameleleri, tahsil dairelerince düzenlenen ve alacaklı amme idaresinin mahalli en büyük memuru veya tevkil edeceği memur tarafından tasdik edilen haciz varakalarına dayanılarak yapılır."
+    },
+    {
+      "id": 38, "konu": "haciz", "madde": "62", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Borçlu tarafından başkasına ait olduğu beyan edilen veya üçüncü şahıslarca istihkak iddia edilmiş malların haczi en sonraya bırakılır.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.62/3 — Başkasının olduğu beyan edilen veya ihtiyaten haciz/istihkak iddiasına konu malların haczi en sonraya bırakılır."
+    },
+    {
+      "id": 39, "konu": "haciz", "madde": "62", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Tahsil dairesi, borçlunun mallarından amme alacağına yetecek miktarı değil, tüm mal varlığını haczeder.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.62/1 — Borçlunun mallarından AMME ALACAĞINA YETECEK MİKTARI haczolunur. Ayrıca tahsil dairesi, idare ile borçlunun menfaatlerini mümkün olduğu kadar telif etmekle yükümlüdür."
+    },
+    {
+      "id": 40, "konu": "zamanasimi", "madde": "102", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Amme alacağının tahsil zamanaşımı süresi ve başlangıcı aşağıdakilerden hangisidir?",
+      "secenekler": ["Vade tarihinden itibaren 5 yıl", "Vadenin rastladığı takvim yılını takip eden takvim yılı başından itibaren 5 yıl", "Tahakkuk tarihinden itibaren 5 yıl", "Vadenin rastladığı takvim yılını takip eden takvim yılı başından itibaren 10 yıl", "Tebliğ tarihinden itibaren 3 yıl"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.102 — Amme alacağı, vadesinin rastladığı takvim yılını takip eden takvim yılı başından itibaren 5 yıl içinde tahsil edilmezse zamanaşımına uğrar. Başlangıç noktası vade günü değil, izleyen yılbaşıdır."
+    },
+    {
+      "id": 41, "konu": "zamanasimi", "madde": "102", "seviye": 2, "format": "dogru-yanlis",
+      "soru": "Tahsil zamanaşımı gerçekleştikten sonra mükellefin rızasıyla yapacağı ödemeler kabul edilmez.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.102/2 — Zamanaşımından sonra mükellefin RIZAEN yapacağı ödemeler kabul olunur."
+    },
+    {
+      "id": 42, "konu": "zamanasimi", "madde": "103", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi tahsil zamanaşımını kesen hallerden biri değildir?",
+      "secenekler": ["Ödeme", "Haciz tatbiki", "Ödeme emri tebliği", "Mal bildirimi", "Borçlunun yabancı memlekette bulunması"],
+      "dogru": 4,
+      "aciklama": "6183 SK m.103-104 — Ödeme, haciz tatbiki, ödeme emri tebliği ve mal bildirimi zamanaşımını KESER. Borçlunun yabancı memlekette bulunması ise zamanaşımının İŞLEMEMESİ (durması) sebebidir (m.104)."
+    },
+    {
+      "id": 43, "konu": "zamanasimi", "madde": "103", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Zamanaşımı kesildiğinde, kesilmenin rastladığı takvim yılını takip eden takvim yılı başından itibaren yeniden işlemeye başlar.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.103/son — Kesilmenin rastladığı takvim yılını takip eden takvim yılı başından itibaren zamanaşımı yeniden işlemeye başlar."
+    },
+    {
+      "id": 44, "konu": "zamanasimi", "madde": "104", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Aşağıdakilerden hangisi tahsil zamanaşımının işlememesi (durması) sebeplerinden biridir?",
+      "secenekler": ["Borçlunun hileli iflas etmesi", "Ödeme emri tebliği", "Amme alacağının teminata bağlanması", "Borçlunun ölümü", "Kaza mercilerince bozma kararı verilmesi"],
+      "dogru": 0,
+      "aciklama": "6183 SK m.104 — Borçlunun yabancı memlekette bulunması, HİLELİ İFLAS ETMESİ veya terekesinin tasfiyesi dolayısıyla takibat yapılamıyorsa bu hallerin devamı süresince zamanaşımı işlemez. Diğer seçeneklerdeki tebliğ ve teminata bağlanma kesme sebepleridir (m.103)."
+    },
+    {
+      "id": 45, "konu": "terkin", "madde": "105", "seviye": 2, "format": "coktan-secmeli",
+      "soru": "Tabii afet sebebiyle terkinden faydalanmak için afetin vukuu tarihinden itibaren kaç ay içinde ilgili amme idaresine yazıyla başvurmak şarttır?",
+      "secenekler": ["1 ay", "3 ay", "6 ay", "1 yıl", "2 yıl"],
+      "dogru": 2,
+      "aciklama": "6183 SK m.105/2 — Terkinden faydalanmak için afetin vukuu tarihinden itibaren 6 AY içinde ilgili amme idaresine yazı ile müracaat edilmesi şarttır."
+    },
+    {
+      "id": 46, "konu": "terkin", "madde": "105", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Tabii afet sebebiyle terkin için varlıkların ve mahsullerin en az ne kadarının kaybedilmiş olması gerekir?",
+      "secenekler": ["Dörtte biri", "Üçte biri", "Yarısı", "Üçte ikisi", "Tamamı"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.105/1 — Afetler yüzünden varlıklarının ve mahsullerinin en az ÜÇTE BİRİNİ kaybedenlerin ilgili amme alacakları Cumhurbaşkanı kararıyla kısmen veya tamamen terkin olunur."
+    },
+    {
+      "id": 47, "konu": "terkin", "madde": "106", "seviye": 3, "format": "dogru-yanlis",
+      "soru": "Tahsil imkânsızlığı sebebiyle terkin için tahsil zamanaşımı süresinin dolması beklenir.",
+      "secenekler": ["Doğru", "Yanlış"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.106 — Tahsili imkânsız veya tahsil gideri alacaktan fazla olan küçük tutarlı alacaklar, tahsil zamanaşımı süresi BEKLENİLMEKSİZİN terkin olunabilir."
+    },
+    {
+      "id": 48, "konu": "cebren-tahsil", "madde": "54", "seviye": 3, "format": "coktan-secmeli",
+      "soru": "Borçlu tahsil dairesine teminat göstermişse, vadesinde ödenmeyen alacak için ilk uygulanacak cebren tahsil yolu hangisidir?",
+      "secenekler": ["Borçlunun iflasının istenmesi", "Teminatın paraya çevrilmesi yahut kefilin takibi", "Borçlunun tüm mallarının haczi", "Hapisle tazyik", "İhtiyati tahakkuk"],
+      "dogru": 1,
+      "aciklama": "6183 SK m.54/1 — Amme borçlusu teminat göstermişse cebren tahsil, teminatın paraya çevrilmesi yahut kefilin takibi suretiyle yapılır (m.56'daki bildirim usulüyle birlikte işler)."
+    }
+  ]
+}

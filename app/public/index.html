@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleur Cupcake — Mevzuat Çalışma</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="marka">🧁 <strong>fleur-cupcake</strong> <span class="alt">6183 adaptif çalışma</span></div>
+  <div id="kullanici-alani" class="gizli">
+    <span id="kullanici-ad"></span>
+    <button id="btn-cikis" class="kucuk">Çıkış</button>
+  </div>
+</header>
+
+<main>
+  <!-- Giriş / Kayıt -->
+  <section id="ekran-auth" class="kart">
+    <div class="sekmeler">
+      <button id="sekme-giris" class="sekme aktif">Giriş</button>
+      <button id="sekme-kayit" class="sekme">Üye Ol</button>
+    </div>
+    <form id="form-giris">
+      <label>E-posta <input type="email" name="email" required autocomplete="email"></label>
+      <label>Şifre <input type="password" name="sifre" required autocomplete="current-password"></label>
+      <button type="submit" class="birincil">Giriş Yap</button>
+    </form>
+    <form id="form-kayit" class="gizli">
+      <label>Ad Soyad <input type="text" name="ad" required autocomplete="name"></label>
+      <label>E-posta <input type="email" name="email" required autocomplete="email"></label>
+      <label>Şifre (en az 8 karakter) <input type="password" name="sifre" minlength="8" required autocomplete="new-password"></label>
+      <button type="submit" class="birincil">Üye Ol</button>
+    </form>
+    <p id="auth-mesaj" class="mesaj"></p>
+  </section>
+
+  <!-- Panel -->
+  <section id="ekran-panel" class="gizli">
+    <div class="kart">
+      <h2 id="panel-selam"></h2>
+      <div class="istatistikler">
+        <div class="istat"><span id="istat-toplam">0</span><label>Soru</label></div>
+        <div class="istat"><span id="istat-dogru">0</span><label>Doğru</label></div>
+        <div class="istat"><span id="istat-oran">–</span><label>Başarı</label></div>
+      </div>
+      <button id="btn-basla" class="birincil buyuk">Soru Çöz</button>
+    </div>
+    <div class="kart" id="konu-karti">
+      <h3>Konu Durumu</h3>
+      <div id="konu-listesi" class="konu-listesi"></div>
+      <p class="ipucu">Zayıf konulardan daha sık soru gelir; seviye her konuda ayrı ilerler (1–4).</p>
+    </div>
+  </section>
+
+  <!-- Soru -->
+  <section id="ekran-soru" class="gizli">
+    <div class="kart">
+      <div class="soru-ust">
+        <span id="soru-konu" class="rozet"></span>
+        <span id="soru-seviye" class="rozet seviye"></span>
+      </div>
+      <p id="soru-metin" class="soru-metin"></p>
+      <div id="secenekler" class="secenekler"></div>
+      <div id="sonuc" class="sonuc gizli">
+        <p id="sonuc-baslik"></p>
+        <p id="sonuc-aciklama"></p>
+      </div>
+      <div class="soru-alt">
+        <button id="btn-panel" class="ikincil">Panele Dön</button>
+        <button id="btn-sonraki" class="birincil gizli">Sonraki Soru</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

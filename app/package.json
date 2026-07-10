@@ -1,0 +1,15 @@
+{
+  "name": "fleur-cupcake-quiz",
+  "version": "1.0.0",
+  "description": "Mevzuat tabanlı adaptif sınav uygulaması (6183 sayılı Kanun)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.0"
+  }
+}
