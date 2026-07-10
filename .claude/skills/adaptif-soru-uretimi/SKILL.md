@@ -45,9 +45,21 @@ Bir soru/quiz talebi geldiğinde sırayla:
    dosyalarını güncelle. Oturum sonunda kısa bir özet ver: doğru/yanlış sayısı,
    güçlü/zayıf konular, bir sonraki oturum için öneri.
 
+7. **Dersleri işle.** Her oturum sonunda bu skill klasöründeki `NOTLAR.md` dosyasına
+   öğrenilen dersleri ekle: hangi soru tipleri iyi çalıştı, hangi açıklamalar
+   yetersiz kaldı, kullanıcının tercihleri, tespit edilen metin/harita hataları.
+   Yeni oturuma başlarken önce `NOTLAR.md` dosyasını oku ve derslere uy.
+
 ## Kurallar
 
 - Sorular ve açıklamalar Türkçe olur; resmi mevzuat terminolojisi kullanılır.
+- Madde metni YALNIZCA `mevzuat/` klasöründeki dosyalardan okunur. Dosyada olmayan
+  bir madde için soru üretme; dur ve kullanıcıya sor.
+- **Her düğüm tamamlandığında dur.** Bir düğüm = tek soru + cevap değerlendirmesi +
+  kayıt güncellemesi. Kullanıcı denetleyip onay vermeden bir sonraki soruya geçme.
+- Kavram/konu etiketlerini `data/<kanun-no>/konu-haritasi.md` ve `performans.json`
+  içindeki mevcut anahtarlardan seç; gerçekten gerekmedikçe yeni etiket üretme.
+  Yeni etiket gerekiyorsa önce kullanıcıya sor, kabul edilirse konu haritasına ekle.
 - Bir sorunun doğru cevabı kaynak metinden doğrulanamıyorsa o soruyu sorma.
 - Güncel oran/tutar gerektiren sorularda (gecikme zammı oranı gibi) kaynak metindeki
   değeri kullan ve "metindeki güncel değere göre" olduğunu açıklamada belirt.
