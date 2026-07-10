@@ -3,9 +3,17 @@
   "olusturma": "2026-07-10",
   "oturum_sayisi": 1,
   "genel": {
-    "toplam_soru": 0,
-    "dogru": 0,
+    "toplam_soru": 1,
+    "dogru": 1,
     "yanlis": 0
   },
-  "konular": {}
+  "konular": {
+    "odeme-emri": {
+      "seviye": 2,
+      "toplam": 1,
+      "dogru": 1,
+      "son5": [1],
+      "son_oturum": 1
+    }
+  }
 }
