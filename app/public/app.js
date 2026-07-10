@@ -18,6 +18,8 @@ const KONU_ADLARI = {
 };
 
 let aktifSoru = null;
+let kanunlar = {};
+let secilenKanun = localStorage.getItem('kanun') || null;
 
 async function api(yol, govde) {
   const secenek = govde
@@ -80,8 +82,30 @@ $('btn-cikis').onclick = async () => {
 
 // --- panel ---
 
+function kanunSecimiCiz() {
+  const kutu = $('kanun-secimi');
+  kutu.innerHTML = '';
+  const girisler = Object.entries(kanunlar);
+  if (!secilenKanun || (secilenKanun !== 'karisik' && !kanunlar[secilenKanun])) {
+    secilenKanun = girisler[0][0];
+  }
+  const cip = (deger, etiket) => {
+    const b = document.createElement('button');
+    b.className = 'kanun-cip' + (secilenKanun === deger ? ' aktif' : '');
+    b.textContent = etiket;
+    b.onclick = () => { secilenKanun = deger; localStorage.setItem('kanun', deger); kanunSecimiCiz(); };
+    kutu.appendChild(b);
+  };
+  for (const [no] of girisler) cip(no, no + ' sayılı Kanun');
+  if (girisler.length > 1) cip('karisik', '🔀 Karışık');
+}
+
 async function panelYukle() {
   const ben = await api('/api/ben');
+  if (Object.keys(kanunlar).length === 0) {
+    kanunlar = (await api('/api/kanunlar')).kanunlar;
+  }
+  kanunSecimiCiz();
   $('kullanici-ad').textContent = ben.ad;
   $('kullanici-alani').classList.remove('gizli');
   $('panel-selam').textContent = `Merhaba, ${ben.ad}`;
@@ -95,12 +119,15 @@ async function panelYukle() {
   if (konular.length === 0) {
     liste.innerHTML = '<p class="ipucu">Henüz soru çözülmedi. İlk sorularla seviye tespiti yapılır.</p>';
   }
-  for (const [konu, d] of konular.sort((a, b) => (a[1].dogru / a[1].toplam) - (b[1].dogru / b[1].toplam))) {
+  const cokKanun = Object.keys(kanunlar).length > 1;
+  for (const [anahtar, d] of konular.sort((a, b) => (a[1].dogru / a[1].toplam) - (b[1].dogru / b[1].toplam))) {
+    const [kanunNo, konu] = anahtar.includes('/') ? anahtar.split('/') : [null, anahtar];
     const oran = d.toplam ? Math.round(100 * d.dogru / d.toplam) : 0;
+    const ad = (cokKanun && kanunNo ? kanunNo + ' · ' : '') + (KONU_ADLARI[konu] || konu);
     const satir = document.createElement('div');
     satir.className = 'konu-satir';
     satir.innerHTML = `
-      <span class="ad">${KONU_ADLARI[konu] || konu}</span>
+      <span class="ad">${ad}</span>
       <span class="cubuk"><i style="width:${oran}%"></i></span>
       <span class="sev">%${oran} · sev. ${d.seviye}</span>`;
     liste.appendChild(satir);
@@ -115,8 +142,9 @@ $('btn-sonraki').onclick = soruYukle;
 $('btn-panel').onclick = panelYukle;
 
 async function soruYukle() {
-  aktifSoru = await api('/api/soru');
-  $('soru-konu').textContent = KONU_ADLARI[aktifSoru.konu] || aktifSoru.konu;
+  aktifSoru = await api('/api/soru?kanun=' + encodeURIComponent(secilenKanun || ''));
+  const konuAd = KONU_ADLARI[aktifSoru.konu] || aktifSoru.konu;
+  $('soru-konu').textContent = aktifSoru.kanun + ' · ' + konuAd;
   $('soru-seviye').textContent = 'Seviye ' + aktifSoru.seviye;
   $('soru-metin').textContent = aktifSoru.soru;
   $('sonuc').className = 'sonuc gizli';

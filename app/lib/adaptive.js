@@ -1,9 +1,15 @@
 // Adaptif soru seçimi — .claude/skills/adaptif-soru-uretimi/references/adaptasyon.md
-// içindeki kuralların uygulamaya taşınmış hali.
+// içindeki kuralların uygulamaya taşınmış hali. Çok kanunlu: sorular kanun bazında
+// ayrı çalışılabilir veya "karisik" modda tüm kanunlardan gelir; performans
+// "kanun/konu" anahtarıyla her kanun için ayrı izlenir.
 
 const bank = require('../data/soru-bankasi.json');
 
-const KONULAR = [...new Set(bank.sorular.map(s => s.konu))];
+const KANUNLAR = bank.kanunlar; // { "6183": "Amme Alacaklarının..." }
+
+function konuAnahtari(soru) {
+  return soru.kanun + '/' + soru.konu;
+}
 
 function bosKonu() {
   return { seviye: 2, toplam: 0, dogru: 0, son5: [] };
@@ -45,39 +51,48 @@ function agirlikliSec(items, weightFn) {
 }
 
 // Kullanıcı için sıradaki soruyu seç.
-// perf: { konular: { konuId: {seviye,toplam,dogru,son5} }, cevaplar: [{soruId,sonuc,sira}] }
-function soruSec(perf) {
+// kanun: "6183" gibi bir kanun no veya "karisik" (tüm kanunlar).
+// perf: { konular: { "kanun/konu": {seviye,toplam,dogru,son5} },
+//         cevaplar: [{soruId,kanun,konu,sonuc,sira}] }
+function soruSec(perf, kanun) {
+  const kanunSorulari = kanun === 'karisik'
+    ? bank.sorular
+    : bank.sorular.filter(s => s.kanun === kanun);
+  if (kanunSorulari.length === 0) return null;
+
   const cevaplanan = new Map(perf.cevaplar.map(c => [c.soruId, c]));
   const sira = perf.cevaplar.length;
 
-  // Havuzda sorusu kalan konular: önce hiç sorulmamış, sonra yanlış yapılıp
-  // üzerinden en az 5 soru geçmiş olanlar tekrar sorulabilir.
-  const uygunSorular = bank.sorular.filter(s => {
+  // Havuz: önce hiç sorulmamışlar; yanlış yapılıp üzerinden en az 5 soru
+  // geçmiş olanlar tekrar sorulabilir. Havuz boşalırsa tümü açılır.
+  const uygunSorular = kanunSorulari.filter(s => {
     const c = cevaplanan.get(s.id);
     if (!c) return true;
     if (c.sonuc === 'yanlis' && sira - c.sira >= 5) return true;
     return false;
   });
-  const havuz = uygunSorular.length > 0 ? uygunSorular : bank.sorular;
+  const havuz = uygunSorular.length > 0 ? uygunSorular : kanunSorulari;
 
   const konuDurum = {};
-  for (const konu of KONULAR) {
-    if (havuz.some(s => s.konu === konu)) {
-      konuDurum[konu] = perf.konular[konu] || bosKonu();
+  for (const s of havuz) {
+    const anahtar = konuAnahtari(s);
+    if (!konuDurum[anahtar]) {
+      konuDurum[anahtar] = perf.konular[anahtar] || bosKonu();
     }
   }
 
   // Aynı konudan üst üste en fazla 3 soru.
-  const sonUc = perf.cevaplar.slice(-3).map(c => c.konu);
-  const konular = Object.keys(konuDurum).filter(konu =>
-    !(sonUc.length === 3 && sonUc.every(k => k === konu))
+  const sonUc = perf.cevaplar.slice(-3).map(c => c.kanun + '/' + c.konu);
+  let anahtarlar = Object.keys(konuDurum).filter(a =>
+    !(sonUc.length === 3 && sonUc.every(k => k === a))
   );
+  if (anahtarlar.length === 0) anahtarlar = Object.keys(konuDurum);
 
-  const secilenKonu = agirlikliSec(konular, k => konuAgirligi(konuDurum[k]));
-  const hedefSeviye = konuDurum[secilenKonu].seviye;
+  const secilenAnahtar = agirlikliSec(anahtarlar, a => konuAgirligi(konuDurum[a]));
+  const hedefSeviye = konuDurum[secilenAnahtar].seviye;
 
   // Konu içinde hedef seviyeye en yakın soruyu seç; eşitlikte rastgele.
-  const konuSorulari = havuz.filter(s => s.konu === secilenKonu);
+  const konuSorulari = havuz.filter(s => konuAnahtari(s) === secilenAnahtar);
   const enYakin = Math.min(...konuSorulari.map(s => Math.abs(s.seviye - hedefSeviye)));
   const adaylar = konuSorulari.filter(s => Math.abs(s.seviye - hedefSeviye) === enYakin);
   return adaylar[Math.floor(Math.random() * adaylar.length)];
@@ -86,7 +101,8 @@ function soruSec(perf) {
 // Cevabı işle: performansı güncelle, sonucu döndür.
 function cevapIsle(perf, soru, secilenIndex) {
   const dogruMu = secilenIndex === soru.dogru;
-  const k = perf.konular[soru.konu] || (perf.konular[soru.konu] = bosKonu());
+  const anahtar = konuAnahtari(soru);
+  const k = perf.konular[anahtar] || (perf.konular[anahtar] = bosKonu());
   k.toplam += 1;
   if (dogruMu) k.dogru += 1;
   k.son5.push(dogruMu ? 1 : 0);
@@ -94,6 +110,7 @@ function cevapIsle(perf, soru, secilenIndex) {
   seviyeGuncelle(k);
   perf.cevaplar.push({
     soruId: soru.id,
+    kanun: soru.kanun,
     konu: soru.konu,
     sonuc: dogruMu ? 'dogru' : 'yanlis',
     sira: perf.cevaplar.length,
@@ -106,4 +123,4 @@ function soruBul(id) {
   return bank.sorular.find(s => s.id === id) || null;
 }
 
-module.exports = { soruSec, cevapIsle, soruBul, KONULAR };
+module.exports = { soruSec, cevapIsle, soruBul, KANUNLAR };

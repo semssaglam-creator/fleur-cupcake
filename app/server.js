@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
 const store = require('./lib/store');
-const { soruSec, cevapIsle, soruBul } = require('./lib/adaptive');
+const { soruSec, cevapIsle, soruBul, KANUNLAR } = require('./lib/adaptive');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,8 +88,16 @@ app.get('/api/ben', yetkiGerekli, (req, res) => {
 
 // --- quiz ---
 
+app.get('/api/kanunlar', yetkiGerekli, (req, res) => {
+  res.json({ kanunlar: KANUNLAR });
+});
+
 app.get('/api/soru', yetkiGerekli, (req, res) => {
-  const soru = soruSec(req.giris.user.performans);
+  const kanun = req.query.kanun || Object.keys(KANUNLAR)[0];
+  if (kanun !== 'karisik' && !KANUNLAR[kanun]) {
+    return res.status(400).json({ hata: 'Geçersiz kanun seçimi.' });
+  }
+  const soru = soruSec(req.giris.user.performans, kanun);
   if (!soru) return res.status(404).json({ hata: 'Uygun soru bulunamadı.' });
   // Doğru cevap ve açıklama istemciye gönderilmez.
   const { dogru, aciklama, ...acik } = soru;

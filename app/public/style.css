@@ -111,6 +111,14 @@ button {
 .konu-satir .sev { color: var(--soluk); font-size: 0.8rem; white-space: nowrap; }
 .ipucu { margin-top: 0.8rem; font-size: 0.8rem; color: var(--soluk); }
 
+/* Kanun seçimi */
+.kanun-secimi { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.kanun-cip {
+  border: 1.5px solid var(--cizgi); background: var(--zemin); color: var(--metin);
+  border-radius: 999px; padding: 0.45rem 0.9rem; font-size: 0.88rem; min-height: 0;
+}
+.kanun-cip.aktif { background: var(--pembe); border-color: var(--pembe); color: #fff; }
+
 /* Soru ekranı */
 .soru-ust { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
 .rozet {

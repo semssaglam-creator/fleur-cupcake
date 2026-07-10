@@ -33,10 +33,26 @@ Node.js 18+ gerektirir. Farklı port için: `PORT=8080 npm start`
 - `data/kullanicilar.json` — üyeler ve performans geçmişi (gitignore'da; sunucuda oluşur)
 - `data/oturumlar.json` — aktif oturumlar (gitignore'da)
 
+## Çok kanunlu çalışma
+
+Uygulama birden fazla kanunu destekler. Panelde kanun seçilir; birden fazla
+kanun varsa **🔀 Karışık** modu tüm kanunlardan soru getirir. Performans her
+kanunda konu bazında ayrı izlenir (`"kanun/konu"` anahtarıyla), yani 6183'te
+ileri seviyeye geçmiş olmanız yeni eklenen kanunda seviyenizi etkilemez.
+
+### Yeni kanun ekleme
+
+1. Kanunun güncel tam metnini `mevzuat/<kanun-no>.md` olarak ekleyin.
+2. `data/<kanun-no>/konu-haritasi.md` ile konu kimliklerini tanımlayın.
+3. `app/data/soru-bankasi.json` içinde:
+   - `kanunlar` nesnesine `"<kanun-no>": "<Kanun Adı>"` girin,
+   - her soruya `"kanun": "<kanun-no>"` alanıyla soruları ekleyin
+     (`id` değerleri bankada benzersiz olmalıdır).
+
 ## Soru bankasını genişletme
 
 Yeni soru eklerken `CLAUDE.md` kuralları geçerlidir: madde metni yalnızca
-`mevzuat/` klasöründen okunur, konu etiketleri `data/6183/konu-haritasi.md`
+`mevzuat/` klasöründen okunur, konu etiketleri `data/<kanun-no>/konu-haritasi.md`
 kimlikleriyle aynı olmalıdır. `adaptif-soru-uretimi` skill'i ile üretilen
 sorular bu bankaya aynı şemayla aktarılabilir.
 
