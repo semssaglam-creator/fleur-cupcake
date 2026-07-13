@@ -1,0 +1,39 @@
+name: Web sürümünü yayınla
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/pdf-to-excel-word-converter-ws2k41"]
+    paths: ["web/**", ".github/workflows/web-yayinla.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  yayinla:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.dagitim.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pages yapılandır
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Siteyi paketle
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Yayınla
+        id: dagitim
+        uses: actions/deploy-pages@v4
