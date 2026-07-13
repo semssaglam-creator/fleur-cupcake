@@ -291,6 +291,83 @@ function satirHizasi(satir, sayfaGen) {
   return docx.AlignmentType.LEFT;
 }
 
+/* ---------- Tablo algılama ---------- */
+
+function satirParcalari(satir) {
+  // Satırı, aralarında belirgin yatay boşluk olan parçalara (hücre adaylarına) böler.
+  // Eşik yazı boyutuna göre ölçeklenir: kelime arası ~0,3 punto, hücre arası ~1+ punto.
+  const parcalar = [];
+  let aktif = null, oncekiSon = null;
+  for (const o of satir.ogeler) {
+    const esik = Math.max(5, (o.boyut || 11) * 0.45);
+    if (aktif && oncekiSon !== null && o.x - oncekiSon > esik) {
+      parcalar.push(aktif); aktif = null;
+    }
+    if (!aktif) aktif = { x0: o.x, x1: o.x + o.gen, ogeler: [] };
+    aktif.ogeler.push(o);
+    oncekiSon = o.x + o.gen;
+    aktif.x1 = oncekiSon;
+  }
+  if (aktif) parcalar.push(aktif);
+  return parcalar.filter(p => satirMetni({ ogeler: p.ogeler }));
+}
+
+function kenarlariKumele(baslar) {
+  // Hücre başlangıç x'lerini sütun kenarlarına kümeler
+  const sirali = [...baslar].sort((a, b) => a - b);
+  const kumeler = [];
+  for (const x of sirali) {
+    const son = kumeler[kumeler.length - 1];
+    if (son && x - son.toplam / son.adet <= 12) { son.toplam += x; son.adet++; }
+    else kumeler.push({ toplam: x, adet: 1 });
+  }
+  return kumeler.map(k => k.toplam / k.adet);
+}
+
+function bloklaraAyir(satirlar) {
+  // Ardışık, sütunları hizalı çok parçalı satırları tablo bloklarında toplar
+  const bloklar = [];
+  let tablo = null;
+  for (const satir of satirlar) {
+    if (!satirMetni(satir)) continue;
+    const parcalar = satirParcalari(satir);
+    if (parcalar.length >= 2) {
+      const hizali = tablo && parcalar.some(p =>
+        tablo.baslar.some(b => Math.abs(b - p.x0) <= 12));
+      if (!tablo || !hizali) {
+        tablo = { tip: "tablo", satirlar: [], baslar: [] };
+        bloklar.push(tablo);
+      }
+      tablo.satirlar.push({ satir, parcalar });
+      for (const p of parcalar) tablo.baslar.push(p.x0);
+    } else {
+      tablo = null;
+      bloklar.push({ tip: "satir", satir });
+    }
+  }
+  // Tek satırda kalan "tablolar" tablo değildir; paragrafa geri düşür
+  return bloklar.flatMap(b =>
+    b.tip !== "tablo" || b.satirlar.length >= 2
+      ? [b]
+      : b.satirlar.map(ts => ({ tip: "satir", satir: ts.satir })));
+}
+
+function tabloHucreleri(blok) {
+  // Sütun kenarlarını bloğun tamamından çıkarır, her parçayı en yakın sütuna atar
+  const kenarlar = kenarlariKumele(blok.baslar);
+  return blok.satirlar.map(({ parcalar }) => {
+    const hucreler = kenarlar.map(() => null);
+    for (const p of parcalar) {
+      let j = 0;
+      for (let k = 0; k < kenarlar.length; k++)
+        if (p.x0 >= kenarlar[k] - 12) j = k;
+      if (hucreler[j]) hucreler[j].ogeler.push(...p.ogeler);
+      else hucreler[j] = { ogeler: [...p.ogeler] };
+    }
+    return hucreler.map(h => ({ ogeler: h ? h.ogeler : [] }));
+  });
+}
+
 let ocrIsci = null;
 
 function wasmSimdDestegi() {
@@ -353,21 +430,39 @@ async function sayfayiOku(sayfa, ocrAcik) {
     const fontlar = await sayfaFontlari(sayfa, icerik.items, icerik.styles);
     const sayfaGen = sayfa.getViewport({ scale: 1 }).width;
     const zengin = [];
+    const hucreSatirlari = [];
     let oncekiY = null, oncekiYuk = 12;
-    for (const s of satirlar) {
-      if (!satirMetni(s)) continue;
-      const yuk = Math.max(...s.ogeler.map(o => o.boyut || o.yuk || 12));
-      zengin.push({
-        runs: wordSatirRuns(s, fontlar),
-        hiza: satirHizasi(s, sayfaGen),
-        oncesiBos: oncekiY !== null && (oncekiY - s.y) > 2.2 * Math.max(yuk, oncekiYuk),
-      });
-      oncekiY = s.y; oncekiYuk = yuk;
+    for (const blok of bloklaraAyir(satirlar)) {
+      if (blok.tip === "tablo") {
+        const hucreler = tabloHucreleri(blok);
+        zengin.push({
+          tur: "tablo",
+          satirlar: hucreler.map(h => h.map(hucre => ({
+            runs: hucre.ogeler.length
+              ? wordSatirRuns({ ogeler: hucre.ogeler }, fontlar) : [],
+          }))),
+        });
+        for (const h of hucreler)
+          hucreSatirlari.push(h.map(x => satirMetni({ ogeler: x.ogeler })));
+        const son = blok.satirlar[blok.satirlar.length - 1].satir;
+        oncekiY = son.y; oncekiYuk = 12;
+      } else {
+        const s = blok.satir;
+        const yuk = Math.max(...s.ogeler.map(o => o.boyut || o.yuk || 12));
+        zengin.push({
+          tur: "p",
+          runs: wordSatirRuns(s, fontlar),
+          hiza: satirHizasi(s, sayfaGen),
+          oncesiBos: oncekiY !== null && (oncekiY - s.y) > 2.2 * Math.max(yuk, oncekiYuk),
+        });
+        hucreSatirlari.push([satirMetni(s)]);
+        oncekiY = s.y; oncekiYuk = yuk;
+      }
     }
     return {
       zengin,
       paragraflar: satirlar.map(satirMetni).filter(Boolean),
-      hucreSatirlari: satirlar.map(satirHucreleri).filter(h => h.length),
+      hucreSatirlari,
     };
   }
   const ocrMetni = await sayfaOcr(sayfa);
@@ -383,13 +478,35 @@ function wordUret(sayfalar) {
   sayfalar.forEach((sayfa, i) => {
     let ilk = true;
     if (sayfa.zengin && sayfa.zengin.length) {
+      const kenar = { style: docx.BorderStyle.SINGLE, size: 4, color: "808080" };
       for (const z of sayfa.zengin) {
-        if (z.oncesiBos && !ilk) cocuklar.push(new docx.Paragraph({ children: [] }));
-        cocuklar.push(new docx.Paragraph({
-          children: z.runs,
-          alignment: z.hiza,
-          pageBreakBefore: i > 0 && ilk,
-        }));
+        if (z.tur === "tablo") {
+          if (i > 0 && ilk)
+            cocuklar.push(new docx.Paragraph({ children: [], pageBreakBefore: true }));
+          cocuklar.push(new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            borders: {
+              top: kenar, bottom: kenar, left: kenar, right: kenar,
+              insideHorizontal: kenar, insideVertical: kenar,
+            },
+            rows: z.satirlar.map(hs => new docx.TableRow({
+              children: hs.map(hucre => new docx.TableCell({
+                margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                children: [new docx.Paragraph({
+                  children: hucre.runs.length ? hucre.runs : [new docx.TextRun("")],
+                })],
+              })),
+            })),
+          }));
+          cocuklar.push(new docx.Paragraph({ children: [] }));
+        } else {
+          if (z.oncesiBos && !ilk) cocuklar.push(new docx.Paragraph({ children: [] }));
+          cocuklar.push(new docx.Paragraph({
+            children: z.runs,
+            alignment: z.hiza,
+            pageBreakBefore: i > 0 && ilk,
+          }));
+        }
         ilk = false;
       }
     } else {
