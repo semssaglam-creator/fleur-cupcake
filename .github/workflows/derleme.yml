@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+    branches: ["claude/pdf-to-excel-word-converter-ws2k41"]
+    paths-ignore: ["surumler/**"]
 
 permissions:
   contents: write
