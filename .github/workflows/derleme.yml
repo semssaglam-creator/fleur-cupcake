@@ -5,6 +5,9 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: write
+
 jobs:
   derle:
     # Eski glibc ile derlenen dosya daha çok dağıtımda çalışır
