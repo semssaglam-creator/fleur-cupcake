@@ -191,6 +191,8 @@ function satirlaraAyir(ogeler) {
     .map(o => ({
       metin: o.str, x: o.transform[4], y: o.transform[5],
       gen: o.width || 0, yuk: o.height || 10,
+      font: o.fontName || "",
+      boyut: Math.hypot(o.transform[2], o.transform[3]) || o.height || 11,
     }));
   kalanlar.sort((a, b) => b.y - a.y || a.x - b.x);
   const satirlar = [];
@@ -230,6 +232,63 @@ function satirHucreleri(satir) {
   }
   if (aktif.trim()) hucreler.push(aktif.trim());
   return hucreler;
+}
+
+/* ---------- Biçim koruma (yazı boyutu, kalın/italik, hizalama) ---------- */
+
+async function sayfaFontlari(sayfa, ogeler, stiller) {
+  // pdf.js'in iç font adlarını gerçek adlara çevirir (Bold/Italic tespiti için)
+  const adlar = {};
+  try { await sayfa.getOperatorList(); } catch (h) { console.warn(h); }
+  for (const o of ogeler) {
+    if (!o.fontName || adlar[o.fontName] !== undefined) continue;
+    let ad = "";
+    try {
+      const f = sayfa.commonObjs.get(o.fontName);
+      ad = (f && f.name) || "";
+    } catch (h) { /* çözülemeyen font */ }
+    const stil = stiller && stiller[o.fontName];
+    adlar[o.fontName] = { ad: ad, aile: (stil && stil.fontFamily) || "" };
+  }
+  return adlar;
+}
+
+function wordYaziTipi(bilgi) {
+  const metin = ((bilgi && bilgi.ad) || "") + " " + ((bilgi && bilgi.aile) || "");
+  if (/mono|courier/i.test(metin)) return "Courier New";
+  if (/times|serif/i.test(metin) && !/sans/i.test(metin)) return "Times New Roman";
+  return "Arial";
+}
+
+function wordSatirRuns(satir, fontlar) {
+  const runs = [];
+  let oncekiSon = null;
+  for (const o of satir.ogeler) {
+    let metin = o.metin;
+    if (oncekiSon !== null && o.x - oncekiSon > 1) metin = " " + metin;
+    const bilgi = fontlar[o.font] || {};
+    const tanim = ((bilgi.ad || "") + " " + (bilgi.aile || ""));
+    runs.push(new docx.TextRun({
+      text: metin,
+      bold: /bold|black|heavy|semibold/i.test(tanim),
+      italics: /italic|oblique/i.test(tanim),
+      font: wordYaziTipi(bilgi),
+      size: Math.max(12, Math.round((o.boyut || 11) * 2)),
+    }));
+    oncekiSon = o.x + o.gen;
+  }
+  return runs;
+}
+
+function satirHizasi(satir, sayfaGen) {
+  const ilk = satir.ogeler[0], son = satir.ogeler[satir.ogeler.length - 1];
+  const x0 = ilk.x, x1 = son.x + son.gen;
+  const merkezFark = Math.abs((x0 + x1) / 2 - sayfaGen / 2);
+  if (x0 > sayfaGen * 0.15 && merkezFark < sayfaGen * 0.05)
+    return docx.AlignmentType.CENTER;
+  if (x0 > sayfaGen * 0.35 && x1 > sayfaGen * 0.88)
+    return docx.AlignmentType.RIGHT;
+  return docx.AlignmentType.LEFT;
 }
 
 let ocrIsci = null;
@@ -291,7 +350,22 @@ async function sayfayiOku(sayfa, ocrAcik) {
   const satirlar = satirlaraAyir(icerik.items);
   const duzMetin = satirlar.map(satirMetni).join("");
   if (duzMetin.trim().length >= 20 || !ocrAcik) {
+    const fontlar = await sayfaFontlari(sayfa, icerik.items, icerik.styles);
+    const sayfaGen = sayfa.getViewport({ scale: 1 }).width;
+    const zengin = [];
+    let oncekiY = null, oncekiYuk = 12;
+    for (const s of satirlar) {
+      if (!satirMetni(s)) continue;
+      const yuk = Math.max(...s.ogeler.map(o => o.boyut || o.yuk || 12));
+      zengin.push({
+        runs: wordSatirRuns(s, fontlar),
+        hiza: satirHizasi(s, sayfaGen),
+        oncesiBos: oncekiY !== null && (oncekiY - s.y) > 2.2 * Math.max(yuk, oncekiYuk),
+      });
+      oncekiY = s.y; oncekiYuk = yuk;
+    }
     return {
+      zengin,
       paragraflar: satirlar.map(satirMetni).filter(Boolean),
       hucreSatirlari: satirlar.map(satirHucreleri).filter(h => h.length),
     };
@@ -307,15 +381,27 @@ async function sayfayiOku(sayfa, ocrAcik) {
 function wordUret(sayfalar) {
   const cocuklar = [];
   sayfalar.forEach((sayfa, i) => {
-    sayfa.paragraflar.forEach((p, j) => {
-      cocuklar.push(new docx.Paragraph({
-        children: [new docx.TextRun(p)],
-        pageBreakBefore: i > 0 && j === 0,
-      }));
-    });
-    if (!sayfa.paragraflar.length) {
-      cocuklar.push(new docx.Paragraph({ children: [], pageBreakBefore: i > 0 }));
+    let ilk = true;
+    if (sayfa.zengin && sayfa.zengin.length) {
+      for (const z of sayfa.zengin) {
+        if (z.oncesiBos && !ilk) cocuklar.push(new docx.Paragraph({ children: [] }));
+        cocuklar.push(new docx.Paragraph({
+          children: z.runs,
+          alignment: z.hiza,
+          pageBreakBefore: i > 0 && ilk,
+        }));
+        ilk = false;
+      }
+    } else {
+      for (const p of sayfa.paragraflar) {
+        cocuklar.push(new docx.Paragraph({
+          children: [new docx.TextRun(p)],
+          pageBreakBefore: i > 0 && ilk,
+        }));
+        ilk = false;
+      }
     }
+    if (ilk) cocuklar.push(new docx.Paragraph({ children: [], pageBreakBefore: i > 0 }));
   });
   const belge = new docx.Document({ sections: [{ children: cocuklar }] });
   return docx.Packer.toBlob(belge);
