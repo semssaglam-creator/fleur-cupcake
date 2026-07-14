@@ -316,13 +316,15 @@ function satirParcalari(satir) {
   return parcalar.filter(p => satirMetni({ ogeler: p.ogeler }));
 }
 
-function kenarlariKumele(baslar) {
-  // Hücre başlangıç x'lerini sütun kenarlarına kümeler
+function kenarlariKumele(baslar, tolerans) {
+  // Değerleri kenar kümelerine toplar. Metin başlangıçları dağınıktır (12 birim);
+  // çizilmiş tablo çizgileri hassastır, dar toleransla kümelenmelidir.
+  const tol = tolerans === undefined ? 12 : tolerans;
   const sirali = [...baslar].sort((a, b) => a - b);
   const kumeler = [];
   for (const x of sirali) {
     const son = kumeler[kumeler.length - 1];
-    if (son && x - son.toplam / son.adet <= 12) { son.toplam += x; son.adet++; }
+    if (son && x - son.toplam / son.adet <= tol) { son.toplam += x; son.adet++; }
     else kumeler.push({ toplam: x, adet: 1 });
   }
   return kumeler.map(k => k.toplam / k.adet);
@@ -492,8 +494,8 @@ function izgaralariKur(dikey, yatay) {
     for (const b of vKume) atanmis.add("d" + b);
     if (vKume.size < 2 || hKume.size < 2) continue;
 
-    const xs = kenarlariKumele([...vKume].map(b => dikey[b].x));
-    const ys = kenarlariKumele([...hKume].map(a => yatay[a].y)).reverse(); // üstten alta
+    const xs = kenarlariKumele([...vKume].map(b => dikey[b].x), 2.5);
+    const ys = kenarlariKumele([...hKume].map(a => yatay[a].y), 2.5).reverse(); // üstten alta
     if (xs.length < 2 || ys.length < 2) continue;
     if ((xs.length - 1) * (ys.length - 1) < 2) continue; // tek hücrelik çerçeveler tablo değil
     izgaralar.push({ xs, ys });
