@@ -111,32 +111,122 @@ def term_matches(term: str, token: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Metin kalitesi ölçümü (taranmış / bozuk kodlamalı PDF tespiti)
+# ---------------------------------------------------------------------------
+
+_VOWELS = set("aeıioöuüAEIİOÖUÜâîûÂÎÛ")
+# Düzgün çıkarılmış Türkçe mevzuat metni ~0.92+ puan alır; bozuk OCR/kodlama
+# çıktısı ~0.77 ve altında kalır. 0.85 ikisini güvenle ayırır.
+QUALITY_THRESHOLD = 0.85
+QUALITY_SEVERE = 0.75
+
+OCR_ADVICE = (
+    "Bu dosyadan sağlıklı metin çıkarılamadı — taranmış (görüntü) veya bozuk "
+    "yazı kodlamalı PDF olabilir. Çözüm: dosyayı OCR'dan geçirin: "
+    "sudo apt install ocrmypdf tesseract-ocr-tur ; "
+    "ocrmypdf -l tur --force-ocr girdi.pdf cikti.pdf — sonra cikti.pdf'i "
+    "mevzuat klasörüne koyun. Mümkünse belgenin metin tabanlı resmî "
+    "sürümünü (mevzuat.gov.tr / GİB) tercih edin."
+)
+
+
+_CONSONANT_RUN_RE = re.compile(r"[bcçdfgğhjklmnprsştvyzBCÇDFGĞHJKLMNPRSŞTVYZ]{4,}")
+_MIXED_CASE_RE = re.compile(r"[a-zçğıöşü][A-ZÇĞİÖŞÜ]")
+
+
+def _word_is_suspicious(core: str) -> bool:
+    """Bir kelime OCR/kodlama bozulması izi taşıyor mu?
+
+    Türkçe'de q/w/x bulunmaz; 4+ ardışık sessiz harf ('htrP', 'tlrrt'),
+    kelime içinde küçük→BÜYÜK geçişi ('I-leeapUzman') ve harf-rakam-simge
+    karışımı ('q\"galilu_.r') düzgün metinde görülmez.
+    """
+    if core.isdigit():
+        return False
+    if core.isupper() and len(core) <= 6:  # KDV, GVK, TBMM gibi kısaltmalar
+        return False
+    if not core.isalpha():
+        return True
+    folded = tr_fold(core)
+    if any(c in folded for c in "qwx"):
+        return True
+    if not any(c in _VOWELS for c in core):
+        return True
+    if _MIXED_CASE_RE.search(core):
+        return True
+    if _CONSONANT_RUN_RE.search(core):
+        return True
+    # sesli harf oranı aşırı düşük kelimeler ('yrllara' değil 'tlgrfsz' gibi)
+    vowels = sum(c in _VOWELS for c in core)
+    if len(core) >= 5 and vowels / len(core) < 0.2:
+        return True
+    return False
+
+
+def text_quality(text: str) -> float:
+    """0..1 arası kaba metin kalitesi puanı; düşük puan bozuk çıkarım demektir."""
+    sample = text[:30000]
+    if not sample.strip():
+        return 0.0
+    non_space = [c for c in sample if not c.isspace()]
+    if not non_space:
+        return 0.0
+    letter_ratio = sum(c.isalpha() for c in non_space) / len(non_space)
+    words = re.findall(r"\S+", sample)[:4000]
+    ok = n = 0
+    for w in words:
+        core = re.sub(r"^[^\wçğıöşüÇĞİÖŞÜ]+|[^\wçğıöşüÇĞİÖŞÜ]+$", "", w)
+        if not core:
+            continue
+        n += 1
+        if not _word_is_suspicious(core):
+            ok += 1
+    word_ratio = ok / max(n, 1)
+    return round(0.25 * letter_ratio + 0.75 * word_ratio, 3)
+
+
+# ---------------------------------------------------------------------------
 # Dosya okuma (PDF / DOCX / TXT)
 # ---------------------------------------------------------------------------
 
+def _extract_pdf_pypdf(path: str) -> str:
+    import pypdf  # type: ignore
+    reader = pypdf.PdfReader(path)
+    return "\n".join((page.extract_text() or "") for page in reader.pages)
+
+
+def _extract_pdf_pdftotext(path: str) -> str:
+    out = subprocess.run(
+        ["pdftotext", "-layout", "-enc", "UTF-8", path, "-"],
+        capture_output=True, timeout=120,
+    )
+    if out.returncode != 0:
+        raise RuntimeError("pdftotext hata verdi: " +
+                           out.stderr.decode(errors="replace")[:200])
+    return out.stdout.decode("utf-8", errors="replace")
+
+
 def _read_pdf(path: str) -> str:
-    pypdf_error = None
+    """PDF metnini çıkarır; birden çok yöntem deneyip en kalitelisini seçer."""
+    candidates = []
+    errors = []
     try:
-        import pypdf  # type: ignore
-        reader = pypdf.PdfReader(path)
-        pages = []
-        for page in reader.pages:
-            pages.append(page.extract_text() or "")
-        return "\n".join(pages)
+        candidates.append(_extract_pdf_pypdf(path))
     except ImportError:
         pass
-    except Exception as e:  # pypdf kurulu ama dosyayı/ortamı sevmedi → pdftotext dene
-        pypdf_error = str(e)
-    if shutil.which("pdftotext"):
-        out = subprocess.run(
-            ["pdftotext", "-layout", "-enc", "UTF-8", path, "-"],
-            capture_output=True, timeout=120,
-        )
-        if out.returncode == 0:
-            return out.stdout.decode("utf-8", errors="replace")
-        raise RuntimeError("pdftotext hata verdi: " + out.stderr.decode(errors="replace")[:200])
-    if pypdf_error:
-        raise RuntimeError("PDF okunamadı (pypdf hatası): " + pypdf_error[:200])
+    except Exception as e:
+        errors.append("pypdf: " + str(e)[:150])
+    # pypdf sonucu yoksa ya da bozuk görünüyorsa pdftotext ile de dene
+    if shutil.which("pdftotext") and (
+            not candidates or text_quality(candidates[0]) < QUALITY_THRESHOLD):
+        try:
+            candidates.append(_extract_pdf_pdftotext(path))
+        except Exception as e:
+            errors.append(str(e)[:150])
+    if candidates:
+        return max(candidates, key=text_quality)
+    if errors:
+        raise RuntimeError("PDF okunamadı: " + " | ".join(errors))
     raise RuntimeError(
         "PDF okunamadı: 'pypdf' paketi veya 'pdftotext' komutu bulunamadı. "
         "Kurulum için: pip install pypdf  (veya)  sudo apt install poppler-utils"
@@ -182,6 +272,7 @@ DOC_TYPES = [
     (("yonetmelik",), "Yönetmelik", 3),
     (("yonerge",), "Yönerge", 5),
     (("cumhurbaskani karari", "bkk", "karar"), "Karar", 2),
+    (("kilavuz", "klavuz", "rehber", "el kitabi"), "Rehber", 8),
     (("kanun", "khk"), "Kanun", 1),
     # Yalnız kısaltmayla adlandırılmış dosyalar ('VUK.pdf') kanun sayılır;
     # tür kelimeleri yukarıda arandığından buraya ancak düşerse gelir.
@@ -222,6 +313,7 @@ HIERARCHY_NOTE = {
     "Yönerge": "Yönerge iç düzenlemedir; kanun ve üst düzenlemelerle birlikte değerlendirilmelidir.",
     "Sirküler": "Sirküler, idarenin görüşünü yansıtır; bağlayıcılığı kanun ve tebliğden sonra gelir.",
     "Özelge": "Özelge, yalnızca verildiği mükellefin somut olayı için idarenin görüşüdür; emsal olarak dikkatle kullanılmalıdır.",
+    "Rehber": "Rehber/kılavuz, idarenin yardımcı kaynağıdır; bağlayıcı mevzuat değildir, dayandığı kanun ve tebliğ hükümleri esas alınır.",
     "Belge": "Belge türü dosya adından tespit edilemedi; hiyerarşideki yerini kontrol ediniz.",
 }
 
@@ -349,18 +441,47 @@ _ARTICLE_RE = re.compile(
 _SECTION_RE = re.compile(r"^[ \t]*(\d+(?:\.\d+){0,3})[.)]\s+(?=[A-ZÇĞİÖŞÜ])", re.MULTILINE)
 
 
+def _chunk_paragraphs(text: str, prefix: str, size: int = 1500):
+    """Yapısız metni ~size karakterlik bloklara ayırır (paragraf sınırında;
+    boş satırsız dev paragraflar boşluktan kesilir)."""
+    blocks, buf, n = [], [], 0
+    for p in re.split(r"\n\s*\n", text):
+        while len(p) > size * 2:  # tek dev paragraf: boşluktan böl
+            cut = p.rfind(" ", size, size * 2)
+            if cut == -1:
+                cut = size * 2
+            buf.append(p[:cut])
+            blocks.append("\n\n".join(buf))
+            buf, n = [], 0
+            p = p[cut:]
+        buf.append(p)
+        n += len(p)
+        if n >= size:
+            blocks.append("\n\n".join(buf))
+            buf, n = [], 0
+    if buf:
+        blocks.append("\n\n".join(buf))
+    blocks = [b.strip() for b in blocks if b.strip()]
+    if len(blocks) == 1:
+        return [(prefix, blocks[0])]
+    return [("%s %d" % (prefix, i + 1), b) for i, b in enumerate(blocks)]
+
+
 def split_articles(text: str):
     """Metni madde/bölüm parçalarına ayırır.
 
     Önce 'MADDE n' kalıbı denenir (kanunlar); yeterince bölünemezse
     numaralı başlıklar (tebliğ/sirküler) denenir; o da olmazsa metin
     sabit uzunlukta paragraf bloklarına ayrılır (özelgeler genelde
-    maddesizdir).
+    maddesizdir). Giriş kısmı (içindekiler vb.) tek dev blok olmasın
+    diye ayrıca parçalanır.
     Dönüş: [(başlık, gövde), ...]
     """
     matches = list(_ARTICLE_RE.finditer(text))
     if len(matches) >= 3:
         parts = []
+        if matches[0].start() > 200:
+            parts.extend(_chunk_paragraphs(text[: matches[0].start()].strip(), "Giriş"))
         for i, m in enumerate(matches):
             start = m.start()
             end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
@@ -369,16 +490,13 @@ def split_articles(text: str):
             body = text[start:end].strip()
             if body:
                 parts.append((label, body))
-        # ilk maddeden önceki giriş kısmı
-        if matches[0].start() > 200:
-            parts.insert(0, ("Giriş", text[: matches[0].start()].strip()))
         return parts
 
     matches = list(_SECTION_RE.finditer(text))
     if len(matches) >= 4:
         parts = []
         if matches[0].start() > 200:
-            parts.append(("Giriş", text[: matches[0].start()].strip()))
+            parts.extend(_chunk_paragraphs(text[: matches[0].start()].strip(), "Giriş"))
         for i, m in enumerate(matches):
             start = m.start()
             end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
@@ -387,21 +505,8 @@ def split_articles(text: str):
                 parts.append(("Bölüm " + m.group(1), body))
         return parts
 
-    # Yapısız belge: ~1500 karakterlik bloklara ayır (paragraf sınırında)
-    parts = []
-    paras = re.split(r"\n\s*\n", text)
-    buf, n = [], 0
-    idx = 1
-    for p in paras:
-        buf.append(p)
-        n += len(p)
-        if n >= 1500:
-            parts.append(("Bölüm %d" % idx, "\n\n".join(buf).strip()))
-            buf, n = [], 0
-            idx += 1
-    if buf and "\n\n".join(buf).strip():
-        parts.append(("Bölüm %d" % idx, "\n\n".join(buf).strip()))
-    return parts
+    # Yapısız belge
+    return _chunk_paragraphs(text, "Bölüm")
 
 
 # ---------------------------------------------------------------------------
@@ -517,6 +622,8 @@ class Index:
         self.doc_alias_map = []     # [(doc_name, doc_type, alias kümesi)]
         self.cited_by = {}          # hedef id -> [atıf yapan id'ler]
         self.amend_map = {}         # hedef id -> [{"src": id, "kind": str}]
+        self.low_quality = set()    # bozuk metinli belge adları
+        self.doc_quality = {}       # belge adı -> kalite puanı
         self.lock = threading.Lock()
 
     def needs_reindex(self) -> bool:
@@ -535,6 +642,8 @@ class Index:
             self.mtimes = {}
             self.art_lookup = {}
             self.doc_alias_map = []
+            self.low_quality = set()
+            self.doc_quality = {}
             os.makedirs(MEVZUAT_DIR, exist_ok=True)
             for fn in sorted(os.listdir(MEVZUAT_DIR)):
                 path = os.path.join(MEVZUAT_DIR, fn)
@@ -543,10 +652,16 @@ class Index:
                 self.mtimes[path] = os.path.getmtime(path)
                 name = os.path.splitext(fn)[0]
                 entry = {"name": name, "file": fn, "type": "?", "articles": 0,
-                         "error": None, "seri_no": None, "date": None}
+                         "error": None, "seri_no": None, "date": None,
+                         "warning": None}
                 try:
                     text = read_document(path)
                     text = re.sub(r"\r\n?", "\n", text)
+                    quality = text_quality(text)
+                    self.doc_quality[name] = quality
+                    if quality < QUALITY_THRESHOLD:
+                        entry["warning"] = OCR_ADVICE
+                        self.low_quality.add(name)
                     doc_type, rank = detect_doc_type(fn, text)
                     entry["type"] = doc_type
                     entry["seri_no"], entry["date"] = extract_doc_meta(fn, text)
@@ -589,12 +704,17 @@ class Index:
                 matched = len(tf)
                 total = sum(tf.values())
                 # tüm terimleri içeren maddeler öne; kanunlar alt
-                # düzenlemelerden önce gelsin; kısa maddede geçiş daha değerli
+                # düzenlemelerden önce gelsin; kısa maddede geçiş daha değerli.
+                # Geçiş sayısı 30'da kırpılır ki içindekiler benzeri dev
+                # bloklar salt tekrar sayısıyla zirveye çıkmasın; bozuk
+                # metinli belgeler geriye itilir.
                 score = (
                     matched * 1000
-                    + total * 10
+                    + min(total, 30) * 10
                     + max(0, 9 - art.rank)
                     - min(len(art.tokens) // 400, 5)
+                    - (500 if self.doc_quality.get(art.doc, 1) < QUALITY_SEVERE
+                       else 150 if art.doc in self.low_quality else 0)
                 )
                 scored.append((score, art, matched, total))
         scored.sort(key=lambda x: -x[0])
@@ -611,6 +731,8 @@ class Index:
                 "summary": highlight(html.escape(summarize(art.body, terms)), terms),
                 "comment": make_comment(art.body, art.doc_type),
             }
+            if art.doc in self.low_quality:
+                r["low_quality"] = True
             warns = self._amend_info(art.id)
             if warns:
                 srcs = []
@@ -821,6 +943,7 @@ class Index:
                     "comment": make_comment(art.body, art.doc_type),
                     "warnings": self._amend_info(art.id),
                     "cited_by": cited[:50],
+                    "low_quality": art.doc in self.low_quality,
                 }
         return None
 
@@ -953,6 +1076,7 @@ mark { background: var(--mark); padding: 0 2px; border-radius: 3px; }
 #docs table { border-collapse: collapse; width: 100%; }
 #docs td, #docs th { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; }
 #docs .err { color: #b00020; }
+#docs .warnq { color: #8a5300; }
 dialog { border: 0; border-radius: 12px; max-width: 860px; width: 92vw; padding: 0;
   box-shadow: 0 10px 40px rgba(0,0,0,.3); }
 dialog::backdrop { background: rgba(15,30,45,.55); }
@@ -1073,8 +1197,9 @@ function resultCard(r){
     + '<span class="label">— '+esc(r.label)+'</span>'
     + '<span class="label" style="margin-left:auto">'+r.matched_terms+'/'+r.total_terms+' terim, '+r.hits+' geçiş</span></div>'
     + '<div class="summary">'+r.summary+'</div>'
+    + (r.low_quality ? '<div class="amend">📷 Bu dosyadan çıkarılan metin bozuk görünüyor (taranmış PDF olabilir) — sonuç güvenilir değil. "Yüklü Mevzuat" sekmesindeki OCR önerisine bakın.</div>' : '')
     + (r.amended ? '<div class="amend">⚠ Bu bölümü değiştiren düzenleme var: <b>'+esc(r.amend_srcs)+'</b> — maddeyi açıp güncel hâli kontrol edin.</div>' : '')
-    + (r.comment ? '<div class="comment">💡 '+r.comment+'</div>' : '')
+    + (r.comment && !r.low_quality ? '<div class="comment">💡 '+r.comment+'</div>' : '')
     + '</div>';
 }
 
@@ -1132,6 +1257,9 @@ async function openArticle(id, nav){
   document.getElementById('dlg-back').style.display = dlgStack.length ? '' : 'none';
   document.getElementById('dlg-title').textContent = res.doc + ' — ' + res.label + '  [' + res.doc_type + ']';
   let h = '';
+  if(res.low_quality){
+    h += '<div class="amend">📷 Bu dosyadan çıkarılan metin bozuk görünüyor (taranmış veya bozuk kodlamalı PDF). Aşağıdaki metne güvenmeyin; "Yüklü Mevzuat" sekmesindeki OCR önerisini uygulayın.</div>';
+  }
   for(const w of (res.warnings || [])){
     h += '<div class="amend">⚠ Bu bölüm <a class="ref" href="#" data-ref="'+w.id+'">'+
       esc(w.doc)+' — '+esc(w.label)+'</a> ile <b>'+esc(w.kind)+'</b>. Güncel uygulama için değiştiren düzenlemeyi açın.</div>';
@@ -1211,7 +1339,7 @@ async function loadStatus(){
   if(!s.docs.length){ el.innerHTML = '<p class="empty">Henüz dosya yüklenmemiş.</p>'; return; }
   el.innerHTML = '<table><tr><th>Dosya</th><th>Tür</th><th>Tarih</th><th>Seri No</th><th>Madde/Bölüm</th><th>Durum</th></tr>' +
     s.docs.map(d=>'<tr><td>'+esc(d.file)+'</td><td>'+esc(d.type)+'</td><td>'+esc(d.date||'—')+'</td><td>'+esc(d.seri_no||'—')+'</td><td>'+d.articles+'</td><td>'+
-      (d.error?'<span class="err">'+esc(d.error)+'</span>':'✓')+'</td></tr>').join('') + '</table>';
+      (d.error?'<span class="err">'+esc(d.error)+'</span>':(d.warning?'<span class="warnq">📷 '+esc(d.warning)+'</span>':'✓'))+'</td></tr>').join('') + '</table>';
 }
 
 async function reindex(){

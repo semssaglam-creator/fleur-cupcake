@@ -98,6 +98,25 @@ adla eski dosyanın üzerine yazın. Uygulama açılışta ve her "Yeniden
   paylaşan kanuna (örn. KDV tebliği → KDV Kanunu) yönlendirilir. Bu yüzden
   ilgili kanunları da yüklemeniz atıf takibini güçlendirir.
 
+## Taranmış (görüntü) PDF'ler hakkında
+
+Bazı PDF'ler (özellikle eski kılavuz ve kitaplar) taranmış görüntüdür;
+içlerindeki metin katmanı bozuk olabilir ("Hesap" yerine "I-leeap" gibi).
+Uygulama her dosyanın **metin kalitesini ölçer**: bozuk çıkarılan dosyalar
+"Yüklü Mevzuat" sekmesinde 📷 işaretiyle gösterilir, arama sonuçlarında
+uyarı taşır ve sıralamada geriye itilir. Ayrıca PDF metni hem `pypdf` hem
+`pdftotext` ile çıkarılıp kaliteli olan seçilir.
+
+Bozuk işaretlenen dosyayı düzeltmek için OCR uygulayın:
+
+```
+sudo apt install ocrmypdf tesseract-ocr-tur
+ocrmypdf -l tur --force-ocr bozuk.pdf duzeltilmis.pdf
+```
+
+`duzeltilmis.pdf`'i mevzuat klasörüne koyun. Mümkünse belgenin metin tabanlı
+resmî sürümünü (mevzuat.gov.tr / GİB) tercih edin.
+
 ## Önemli uyarı
 
 Değişiklik tespiti kalıp tabanlıdır: standart dışı ifadeyle yapılan veya
